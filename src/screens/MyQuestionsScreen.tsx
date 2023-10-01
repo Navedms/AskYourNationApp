@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
+import { FlatList, Platform, StyleSheet, View } from 'react-native';
 
 import Screen from '../components/Screen';
 import colors from '../config/colors';
@@ -13,88 +12,129 @@ import showError from '../components/notifications/showError';
 import askBeforeDelete from '../components/askBeforeDelete';
 import showOk from '../components/notifications/showOk';
 import ListItemMoreOptions from '../components/ListItemMoreOptions';
+import { ApiResponse } from 'apisauce';
+import questionApi, { Question } from '../api/questions';
+import Text from '../components/Text';
+import { useIsFocused } from '@react-navigation/native';
+import useAuth from '../auth/useAuth';
 
 function MyQuestionsScreen({ navigation, route }) {
-  const site = route.params;
-  const [loading, setLoading] = useState(false);
-  const [employeeList, setEmployeeList] = useState('');
-  const isFocused = useIsFocused();
+	const { user, logOut } = useAuth();
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | undefined>(undefined);
+	const [data, setData] = useState<Question[]>([]);
+	const isFocused = useIsFocused();
 
-  const apiSiteList = async () => {
-    site.siteId;
-    const response = await employeeNameApi.get(site.siteId);
-    if (!response) {
-      setLoading(false);
-      return setEmployeeList('');
-    }
-    setEmployeeList(response.data);
-    setLoading(false);
-  };
+	const getMyQuestions = async () => {
+		setLoading(true);
+		const result: ApiResponse<any> = await questionApi.getMyQuestions();
+		if (result.status === 401 || result.status === 403) {
+			return logOut();
+		} else if (result.data.error) {
+			setLoading(false);
 
-  useEffect(() => {
-    setLoading(true);
-    apiSiteList();
-  }, [navigation, isFocused]);
+			return setError(result.data.error);
+		} else if (!result.ok) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		}
+		setError(undefined);
+		setLoading(false);
+		setData(result.data.list);
+	};
 
-  const handleAddPress = () => {
-    navigation.navigate(routes.QUESTION_ADD_EDIT.name);
-  };
-  const handleOnPress = (item) => {
-    item.edit = true;
-    navigation.navigate(routes.QUESTION_ADD_EDIT.name, item);
-  };
+	useEffect(() => {
+		getMyQuestions();
+	}, [navigation, isFocused]);
 
-  const handleDeleteOnePress = async (item) => {
-    item.siteId = site.siteId;
-    const answer = await askBeforeDelete(
-      'alerts.deleteEmployee.fromSite.title',
-      'alerts.deleteEmployee.fromSite.text'
-    );
-    if (answer) {
-      if (answer === 'pass') return;
-      const result = await employeeNameApi.remove(item);
-      if (!result.ok) return showError(result.data.error);
-      showOk(result.data.msg);
-      apiSiteList();
-    }
-  };
+	const handleAddPress = () => {
+		navigation.navigate(routes.QUESTION_ADD_EDIT.name, { inScreen: true });
+	};
+	const handleOnPress = (item) => {
+		item.edit = true;
+		item.inScreen = true;
+		navigation.navigate(routes.QUESTION_ADD_EDIT.name, item);
+	};
 
-  return (
-    <Screen style={{ paddingTop: 0 }}>
-      <Activityindicator visible={loading} />
-      {employeeList.length === 0 && !loading && (
-        <NoResults
-          title={``}
-          text="NoResults.noPatrols.text"
-          iconName="account"
-        />
-      )}
-      <FlatList
-        data={employeeList}
-        keyExtractor={(item) => item._id.toString()}
-        renderItem={({ item }) => (
-          <CardItem
-            sizeImg={50}
-            title={item.name}
-            bold={true}
-            subTitle={''}
-            onPress={() => handleOnPress(item)}
-            renderLeftActions={() => (
-              <ListItemMoreOptions
-                deleteme
-                onPressDelete={() => handleDeleteOnePress(item)}
-              />
-            )}
-          />
-        )}
-      />
-      <AddItem
-        iconName="plus"
-        backgroundColor={colors.secondary}
-        onPress={handleAddPress}
-      />
-    </Screen>
-  );
+	const handleDeleteOnePress = async (item: Question) => {
+		const answer = await askBeforeDelete(
+			'Deleting a question',
+			'Are you sure you want to delete the question?',
+			user?.sounds
+		);
+		if (answer && item._id) {
+			if (answer === 'pass') return;
+			const result: ApiResponse<any> = await questionApi.remove(item._id);
+			if (result.status === 401 || result.status === 403) {
+				return logOut();
+			} else if (!result.ok)
+				return showError(result.data.error, user?.sounds);
+			showOk(result.data.msg, user?.sounds);
+			setData(data.filter((item) => item._id !== result.data.id));
+		}
+	};
+
+	return (
+		<Screen style={{ paddingTop: 0 }}>
+			<Activityindicator visible={loading} />
+			{data.length === 0 && !loading && (
+				<NoResults
+					title='No questions found'
+					text='The questions you write will appear here'
+					iconName='comment-question'
+				/>
+			)}
+			<FlatList
+				data={data}
+				keyExtractor={(item) => item._id.toString()}
+				renderItem={({ item }) => (
+					<CardItem
+						title={item.question}
+						onPress={() => handleOnPress(item)}
+						IconComponent={
+							<View style={styles.flag}>
+								<Text style={styles.flagText}>
+									{item.nation?.flag}
+								</Text>
+							</View>
+						}
+						rating={item.rating}
+						amountOfanswers={item.amountOfanswers}
+						renderLeftActions={() => (
+							<ListItemMoreOptions
+								deleteme
+								edit
+								editIcon='edit'
+								onPressDelete={() => handleDeleteOnePress(item)}
+								onPressEdit={() => handleOnPress(item)}
+							/>
+						)}
+					/>
+				)}
+			/>
+			<AddItem
+				iconName='plus'
+				backgroundColor={colors.primary}
+				onPress={handleAddPress}
+			/>
+		</Screen>
+	);
 }
+
+const styles = StyleSheet.create({
+	flag: {
+		backgroundColor: colors.light,
+		height: 40,
+		width: 40,
+		borderRadius: 20,
+		borderColor: colors.medium,
+		borderWidth: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	flagText: {
+		fontSize: Platform.OS === 'android' ? 20 : 24,
+	},
+});
 
 export default MyQuestionsScreen;

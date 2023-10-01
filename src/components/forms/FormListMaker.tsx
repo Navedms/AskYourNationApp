@@ -1,9 +1,9 @@
 import React, {
-  ComponentProps,
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useState,
+	ComponentProps,
+	Dispatch,
+	SetStateAction,
+	useEffect,
+	useState,
 } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { useFormikContext } from 'formik';
@@ -15,257 +15,240 @@ import defaultStyle from '../../config/style';
 import Text from '../Text';
 import TextInput from '../AppTextInput';
 import { TouchableOpacity } from 'react-native';
-import FormSelectItem from './FormSelectItem';
-import askBeforeDelete from '../askBeforeDelete';
 
 export interface Item {
-  value: string;
-  id: string;
+	value: string;
+	id: string;
 }
 
 interface AppFormListMakerProps {
-  firstValue?: Item[];
-  selectFirstValue: 'Single' | 'Multi';
-  name: string;
-  title: string;
-  selectName: string;
-  icon?: ComponentProps<typeof MaterialCommunityIcons>['name'];
-  placeholder: string;
-  optionPlaceholder?: string;
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
-  border?: number;
-  backgroundColor?: string;
-  placeholderColor?: string;
-  width?: number;
-  fixedPadding?: number;
-  disabled?: boolean;
-  limit?: number;
-  onChange?: (name: string, value: Item[] | null) => void;
-  onPress: (name: string, value: string) => void;
-  scrollViewRef: any;
-  style?: Object;
+	resetFields: boolean;
+	firstValue?: Item[];
+	firstSelectValue?: number;
+	name: string;
+	selectName: string;
+	icon?: ComponentProps<typeof MaterialCommunityIcons>['name'];
+	placeholder: string;
+	optionPlaceholder?: string;
+	border?: number;
+	backgroundColor?: string;
+	placeholderColor?: string;
+	width?: number;
+	fixedPadding?: number;
+	maxLength?: number;
+	onChange?: (name: string, value: Item[] | null) => void;
+	onPress?: (name: string, value: number) => void;
+	style?: Object;
 }
 
 function AppFormListMaker({
-  firstValue,
-  selectFirstValue,
-  name,
-  selectName,
-  title,
-  icon,
-  placeholder,
-  optionPlaceholder = 'Add Option',
-  border = 1,
-  backgroundColor = colors.veryLight,
-  placeholderColor = colors.dark,
-  width = 1,
-  fixedPadding = 40,
-  disabled,
-  limit = 0,
-  onChange,
-  onPress,
-  scrollViewRef,
-  style,
+	resetFields,
+	firstValue,
+	firstSelectValue,
+	name,
+	selectName,
+	icon,
+	placeholder,
+	optionPlaceholder = 'Add Option',
+	border = 1,
+	backgroundColor = colors.veryLight,
+	placeholderColor = colors.dark,
+	width = 1,
+	fixedPadding = 40,
+	maxLength,
+	onChange,
+	onPress,
+	style,
 }: AppFormListMakerProps) {
-  const { setFieldValue, errors, touched } = useFormikContext();
-  const [value, setValue] = useState<Item[]>(firstValue || []);
+	const { setFieldValue, errors, touched } = useFormikContext();
+	const [value, setValue] = useState<Item[]>(firstValue || []);
+	const [selectValue, setSelectValue] = useState<number | undefined>(
+		firstSelectValue
+	);
 
-  const windowWidth = (Dimensions.get('window').width - fixedPadding) * width;
+	const windowWidth = (Dimensions.get('window').width - fixedPadding) * width;
 
-  const handleFirstValue = (firstValue: Item[]) => {
-    if (firstValue?.length > 0) {
-      setFieldValue(name, firstValue);
-      setValue(firstValue);
-    } else if (value?.length === 0) {
-      handleAddOption();
-    }
-  };
+	const handleFirstValue = (firstValue: Item[]) => {
+		if (firstValue?.length > 0) {
+			setFieldValue(name, firstValue);
+			setValue(firstValue);
+		} else if (firstValue?.length === 0) {
+			handleAddOptions();
+		}
+	};
 
-  const handleOnChangeText = (id: string, text: string) => {
-    const index = value.findIndex((obj) => obj.id == id);
-    const newValueList = value;
-    newValueList[index].value = text;
-    setValue(newValueList);
+	const handleFirstSelectValue = (firstSelectValue: number) => {
+		setSelectValue(firstSelectValue);
+		setFieldValue(selectName, firstSelectValue);
+	};
 
-    onChange && onChange(name, newValueList);
-    setFieldValue(name, newValueList);
-  };
+	const handleOnChangeText = (id: string, text: string) => {
+		text = text.replace(
+			/[^0-9a-zA-Z .,;:)(!?@#$%^&~<>{}*+-_=/)""'']/gi,
+			''
+		);
+		const index = value.findIndex((obj) => obj.id == id);
+		const newValueList = value;
+		newValueList[index].value = text;
+		setValue(newValueList);
 
-  const handleOnPress = (name: string, value: string) => {
-    onPress && onPress(name, value);
-    setFieldValue(name, value);
-  };
+		onChange && onChange(name, newValueList);
+		setFieldValue(name, newValueList);
+	};
 
-  useEffect(() => {
-    handleFirstValue(firstValue);
-  }, [firstValue]);
+	useEffect(() => {
+		handleFirstValue(firstValue);
+	}, [firstValue]);
 
-  const handleAddOption = () => {
-    if (value?.length < limit || limit === 0) {
-      setValue([...value, { id: `option-${value.length + 1}`, value: '' }]);
-      scrollViewRef && scrollViewRef.current?.scrollToEnd();
-    }
-  };
+	useEffect(() => {
+		handleFirstSelectValue(firstSelectValue);
+	}, [firstSelectValue]);
 
-  const handleDeleteOption = async (id: string) => {
-    const answer = await askBeforeDelete(
-      'alerts.deleteFormListMaker.title',
-      'alerts.deleteFormListMaker.text'
-    );
-    if (answer) {
-      if (answer === 'pass') return;
-      const tempList = value
-        .filter((obj) => obj.id !== id)
-        .map((obj, index) => {
-          obj.id = `option-${index + 1}`;
-          return obj;
-        });
-      setValue(tempList);
+	const handleAddOptions = () => {
+		setValue([
+			{ id: `option-1`, value: '' },
+			{ id: `option-2`, value: '' },
+			{ id: `option-3`, value: '' },
+			{ id: `option-4`, value: '' },
+		]);
+	};
 
-      onChange && onChange(name, tempList);
-      setFieldValue(name, tempList);
-    }
-  };
+	const handleSelectOption = async (index: number) => {
+		setSelectValue(index);
+		onPress && onPress(selectName, index);
+	};
 
-  return (
-    <>
-      <View
-        style={[
-          styles.container,
-          style,
-          {
-            backgroundColor: backgroundColor,
-            borderWidth: border,
-            width: windowWidth,
-          },
-        ]}
-      >
-        <View style={[defaultStyle.rtlRow, styles.header]}>
-          <View style={[defaultStyle.rtlRow, styles.headerInner]}>
-            {icon && (
-              <MaterialCommunityIcons
-                name={icon}
-                size={28}
-                color={colors.dark}
-                style={styles.icon}
-              />
-            )}
-            <Text style={{ color: placeholderColor }}>{placeholder}</Text>
-          </View>
-          <TouchableOpacity
-            disabled={
-              disabled ||
-              (!value[value.length - 1]?.value && value.length) ||
-              (value?.length >= limit && limit !== 0)
-            }
-            onPress={handleAddOption}
-            style={[
-              styles.addBtn,
-              {
-                opacity:
-                  disabled ||
-                  (!value[value.length - 1]?.value && value.length) ||
-                  (value?.length >= limit && limit !== 0)
-                    ? 0.5
-                    : 1,
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="plus"
-              size={28}
-              color={colors.primary}
-              style={styles.icon}
-            />
-          </TouchableOpacity>
-        </View>
-        {value?.map((item: Item, index: number) => (
-          <View
-            key={item.id}
-            style={[defaultStyle.rtlRow, styles.listContainer]}
-          >
-            <View style={[defaultStyle.rtlRow, styles.headerInner]}>
-              <Text style={[{ color: colors.dark }, defaultStyle.bold]}>{`.${(
-                index + 1
-              ).toString()}`}</Text>
-              <TextInput
-                value={item.value}
-                style={[styles.textInput, { backgroundColor: backgroundColor }]}
-                onChangeText={(value: any) =>
-                  handleOnChangeText(item.id, value)
-                }
-                placeholder={optionPlaceholder}
-                noLabel={true}
-              />
-            </View>
-            <TouchableOpacity
-              onPress={() => handleDeleteOption(item.id)}
-              disabled={disabled || !item.value}
-            >
-              <MaterialCommunityIcons
-                name="delete"
-                size={20}
-                color={
-                  disabled || !item.value ? colors.disabled : colors.lightDelete
-                }
-              />
-            </TouchableOpacity>
-          </View>
-        ))}
-        <View style={{ padding: 10 }}>
-          <FormSelectItem
-            name={selectName}
-            title={title}
-            firstValue={selectFirstValue === 'Multi' ? true : false}
-            onPress={(value: boolean) =>
-              handleOnPress(selectName, value ? 'Multi' : 'Single')
-            }
-          />
-        </View>
-      </View>
-      <ErrorMessage error={errors[name]} visible={touched[name]} />
-    </>
-  );
+	return (
+		<>
+			<View
+				style={[
+					styles.container,
+					style,
+					{
+						backgroundColor: backgroundColor,
+						borderWidth: border,
+						width: windowWidth,
+					},
+				]}>
+				<View style={[defaultStyle.rtlRow, styles.header]}>
+					<View style={[defaultStyle.rtlRow, styles.headerInner]}>
+						{icon && (
+							<MaterialCommunityIcons
+								name={icon}
+								size={28}
+								color={colors.dark}
+								style={styles.icon}
+							/>
+						)}
+						<Text
+							style={{
+								color: placeholderColor,
+								maxWidth: '85%',
+							}}>
+							{placeholder}
+						</Text>
+					</View>
+				</View>
+				{value?.map((item: Item, index: number) => (
+					<View
+						key={item.id}
+						style={[defaultStyle.rtlRow, styles.listContainer]}>
+						<View style={[defaultStyle.rtlRow, styles.headerInner]}>
+							<Text
+								style={{
+									color: colors.dark,
+									fontWeight: 'bold',
+								}}>{`.${(index + 1).toString()}`}</Text>
+							<TextInput
+								key={`option-${resetFields}-${index}`}
+								value={item.value}
+								style={[
+									styles.textInput,
+									{ backgroundColor: backgroundColor },
+								]}
+								onChangeText={(value: any) =>
+									handleOnChangeText(item.id, value)
+								}
+								placeholder={optionPlaceholder}
+								noLabel={true}
+								maxLength={maxLength}
+							/>
+						</View>
+						<TouchableOpacity
+							onPress={() => handleSelectOption(index)}
+							disabled={!item.value}>
+							<MaterialCommunityIcons
+								name={
+									index === selectValue
+										? 'check-circle-outline'
+										: 'checkbox-blank-circle-outline'
+								}
+								size={26}
+								color={
+									!item.value
+										? colors.disabled
+										: index === selectValue
+										? colors.primary
+										: colors.darkMedium
+								}
+							/>
+						</TouchableOpacity>
+					</View>
+				))}
+			</View>
+			<ErrorMessage
+				error={
+					errors[name]
+						? Object.values(errors[name][errors[name]?.length - 1])
+						: ''
+				}
+				visible={touched[name]}
+			/>
+			<ErrorMessage
+				error={errors[selectName]}
+				visible={touched[selectName]}
+			/>
+		</>
+	);
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderRadius: 8,
-    marginVertical: 10,
-    paddingBottom: 15,
-    justifyContent: 'flex-start',
-    zIndex: 1,
-    width: '100%',
-  },
-  header: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  headerInner: {
-    alignItems: 'center',
-  },
-  listContainer: {
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    paddingHorizontal: 15,
-  },
-  addBtn: {
-    alignSelf: 'flex-end',
-  },
-  icon: {
-    marginLeft: 10,
-    marginRight: 14,
-    marginVertical: 12,
-  },
-  textInput: {
-    borderRadius: 0,
-    borderBottomColor: colors.dark,
-    borderBottomWidth: 1,
-    width: '90%',
-  },
+	container: {
+		borderRadius: 8,
+		marginVertical: 10,
+		paddingBottom: 15,
+		justifyContent: 'flex-start',
+		zIndex: 1,
+		width: '100%',
+	},
+	header: {
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		width: '100%',
+	},
+	headerInner: {
+		alignItems: 'center',
+	},
+	listContainer: {
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		width: '100%',
+		paddingHorizontal: 15,
+	},
+	addBtn: {
+		alignSelf: 'flex-end',
+	},
+	icon: {
+		marginLeft: 10,
+		marginRight: 14,
+		marginVertical: 12,
+	},
+	textInput: {
+		borderRadius: 0,
+		borderBottomColor: colors.dark,
+		borderBottomWidth: 1,
+		width: '90%',
+	},
 });
 
 export default AppFormListMaker;

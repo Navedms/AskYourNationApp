@@ -191,7 +191,7 @@ function Filters({
           ]}
         >
           <View style={[defaultStyle.rtlRow, styles.header]}>
-            <Text style={defaultStyle.bold}>general.filterAndSort</Text>
+            <Text style={{fontWeight: 'bold'}}>general.filterAndSort</Text>
           </View>
           <Form
             initialValues={{

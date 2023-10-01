@@ -49,7 +49,7 @@ function AppFormSwitch({
       <Text
         style={[
           styles.optionA,
-          !values[name] && [defaultStyle.bold, { color: colors.black }],
+          !values[name] && { color: colors.black, fontWeight: 'bold' },
         ]}
       >
         {optionAfalse}
@@ -67,7 +67,7 @@ function AppFormSwitch({
       <Text
         style={[
           styles.optionB,
-          values[name] && [defaultStyle.bold, { color: colors.black }],
+          values[name] && { color: colors.black, fontWeight: 'bold' },
         ]}
       >
         {optionBtrue}

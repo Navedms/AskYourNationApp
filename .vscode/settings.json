@@ -1,0 +1,11 @@
+{
+    "prettier.bracketSameLine": true,
+    "prettier.tabWidth": 4,
+    "prettier.singleQuote": true,
+    "prettier.useTabs": true,
+    "prettier.endOfLine": "lf",
+    "javascript.format.insertSpaceAfterConstructor": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": true,
+    "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": true
+}

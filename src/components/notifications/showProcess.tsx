@@ -5,15 +5,16 @@ import defaultStyle from '../../config/style';
 import Sounds from './Sounds';
 
 const showProcess = (msg: string, sound: boolean = false) => {
-  sound && Sounds.SoundNotification();
-  return showMessage({
-    message: msg,
-    type: 'info',
-    icon: 'auto',
-    backgroundColor: colors.dark,
-    titleStyle: defaultStyle.errorMsg,
-    duration: 5000,
-  });
+	sound && Sounds.SoundNotification();
+	return showMessage({
+		message: msg,
+		type: 'info',
+		icon: 'auto',
+		backgroundColor: colors.dark,
+		style: defaultStyle.msg,
+		titleStyle: [defaultStyle.errorMsg, defaultStyle.marginStartRtl(8)],
+		duration: 5000,
+	});
 };
 
 export default showProcess;

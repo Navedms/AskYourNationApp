@@ -15,7 +15,7 @@ import colors from '../config/colors';
 import useAuth from '../auth/useAuth';
 
 const defaultFilters: Filters = {
-	sortBy: 'total',
+	sortBy: 'questions',
 	limit: 10,
 };
 
@@ -26,7 +26,7 @@ interface HighScoresScreenProps {
 	sortBy: SortBy;
 }
 
-function HighScoresScreen({ navigation }: HighScoresScreenProps) {
+function HighScoresQuestionsScreen({ navigation }: HighScoresScreenProps) {
 	// state
 	const isFocused = useIsFocused();
 	const { logOut } = useAuth();
@@ -38,8 +38,9 @@ function HighScoresScreen({ navigation }: HighScoresScreenProps) {
 	const [userNotinList, setUserNotinList] = useState<boolean>(false);
 
 	// APIs
+
 	const getUser = async () => {
-		const result: ApiResponse<any> = await authApi.getUser('total');
+		const result: ApiResponse<any> = await authApi.getUser('questions');
 		if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
@@ -75,7 +76,6 @@ function HighScoresScreen({ navigation }: HighScoresScreenProps) {
 		const userInList = result.data.list.find(
 			(item: User) => item.id === user?.id
 		);
-
 		setUserNotinList(user?.id ? !userInList : false);
 		if (!userInList) {
 			getUser();
@@ -116,7 +116,7 @@ function HighScoresScreen({ navigation }: HighScoresScreenProps) {
 									item === filters.limit &&
 										styles.topActiveItem,
 								]}
-								key={`${item}-total`}
+								key={`${item}-questions`}
 								onPress={() => handleOnPress(item)}>
 								<Text
 									style={[
@@ -199,4 +199,4 @@ const styles = StyleSheet.create({
 	},
 });
 
-export default HighScoresScreen;
+export default HighScoresQuestionsScreen;

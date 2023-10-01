@@ -3,12 +3,18 @@ import jwtDecode from 'jwt-decode';
 
 import AuthContext from './context';
 import authStorage from './storage';
+import { User } from '../api/auth';
+
+interface userProps {
+  user: User | null,
+  setUser: (user: User | null)=> void
+}
 
 export default () => {
-  const { user, setUser }: any = useContext(AuthContext);
+  const { user, setUser }: userProps = useContext<userProps>(AuthContext as any);
 
   const logIn = (authToken: string) => {
-    const user = jwtDecode(authToken);
+    const user: User = jwtDecode(authToken);
     setUser(user);
     authStorage.storeToken(authToken);
   };
@@ -18,5 +24,5 @@ export default () => {
     setUser(null);
   };
 
-  return { user, logIn, logOut };
+  return { user, setUser, logIn, logOut };
 };
