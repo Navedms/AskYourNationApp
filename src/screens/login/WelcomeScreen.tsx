@@ -27,6 +27,7 @@ import routes from '../../navigation/routes';
 import Screen from '../../components/Screen';
 import { ApiResponse } from 'apisauce';
 import showOk from '../../components/notifications/showOk';
+import Activityindicator from '../../components/Activityindicator';
 
 export interface NationSelect {
 	label: string;
@@ -48,6 +49,7 @@ const signList = [
 function WelcomeScreen({ route }: any) {
 	const auth = useAuth();
 	const [error, setError] = useState<string | undefined>(undefined);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [signMode, setSignMode] = useState<string>('SignUp');
 	const [nationList, setNationList] = useState<Nation[]>([]);
 	const [nationSelectList, setNationSelectList] = useState<NationSelect[]>(
@@ -74,8 +76,20 @@ function WelcomeScreen({ route }: any) {
 	const validationSchema = Yup.object().shape(
 		signMode === 'SignUp'
 			? {
-					firstName: Yup.string().required().label('First Name'),
-					lastName: Yup.string().required().label('Last Name'),
+					firstName: Yup.string()
+						.required()
+						.label('First Name')
+						.matches(
+							/^[a-zA-Z ]*$/,
+							'Should contain only alphabets'
+						),
+					lastName: Yup.string()
+						.required()
+						.label('Last Name')
+						.matches(
+							/^[a-zA-Z ]*$/,
+							'Should contain only alphabets'
+						),
 					email: Yup.string()
 						.required()
 						.email()
@@ -92,8 +106,9 @@ function WelcomeScreen({ route }: any) {
 	);
 
 	const handleSubmit = async (values: User) => {
+		setLoading(true);
 		if (values.nation) {
-			const tempNation = nationList.find(
+			const tempNation = nationList?.find(
 				(item) => item.name === values.nation
 			);
 			values.nation = tempNation;
@@ -103,30 +118,36 @@ function WelcomeScreen({ route }: any) {
 		const result: ApiResponse<any> | any = await authApi.loginRegister(
 			values
 		);
-		if (result.data.error) {
-			return setError(result.data.error);
-		} else if (!result.ok) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
 			return setError('Network error: Unable to connect to the server');
+		} else if (result.data.error) {
+			setLoading(false);
+			return setError(result.data.error);
 		}
 		if (result.data.register) {
 			showOk(result.data.message, false);
 			setError(result.data.message);
+			setLoading(false);
 			setSignMode('SignIn');
+			setInitialValues({
+				email: undefined,
+				password: undefined,
+			});
 		} else {
 			setError(undefined);
+			setLoading(false);
 			auth.logIn(result.data);
 		}
 	};
 
 	const getNationList = async () => {
 		if (nationList.length > 0) return;
-		const result: ApiResponse<any> | any = await nationsApi.get();
-
-		if (result.data.error) {
-			return setError(result.data.error);
-		} else if (!result.ok) {
-			return setError('Network error: Unable to connect to the server');
-		}
+		const result: ApiResponse<any> | any = nationsApi.get();
 
 		setError(undefined);
 		setNationList(result.data.list);
@@ -152,6 +173,7 @@ function WelcomeScreen({ route }: any) {
 			source={require('../../../assets/background.jpeg')}>
 			<View style={styles.backgroundLayer}></View>
 			<Screen backgroundColor={colors.opacity}>
+				<Activityindicator visible={loading} />
 				<ScrollView contentContainerStyle={styles.form}>
 					<Image
 						source={require('../../../assets/AskYourNationLogo.png')}
@@ -167,9 +189,27 @@ function WelcomeScreen({ route }: any) {
 							name='SignInOrUp'
 							list={signList}
 							fixedPadding={40}
-							onChange={(name: string, value: string) =>
-								setSignMode(value)
-							}
+							onChange={(name: string, value: string) => {
+								setSignMode(value);
+								setError(undefined);
+								setInitialValues(
+									value === 'SignUp'
+										? {
+												firstName: undefined,
+												lastName: undefined,
+												nation: {
+													name: undefined,
+													flag: undefined,
+												},
+												email: undefined,
+												password: undefined,
+										  }
+										: {
+												email: undefined,
+												password: undefined,
+										  }
+								);
+							}}
 						/>
 						{signMode === 'SignUp' && (
 							<FormField

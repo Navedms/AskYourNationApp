@@ -15,6 +15,7 @@ interface QuestionComponentProps {
 	userAnswer?: number;
 	showAnswers?: ShowAnswers;
 	setOpen: (value: boolean) => void;
+	isReport?: boolean;
 }
 
 const QuestionComponent = ({
@@ -24,20 +25,30 @@ const QuestionComponent = ({
 	userAnswer,
 	showAnswers,
 	setOpen,
+	isReport,
 }: QuestionComponentProps) => {
 	return (
 		<>
 			{data && (
 				<View style={styles.container}>
-					<View style={styles.ask}>
-						<Text>{`${data?.createdBy?.firstName} ${data?.createdBy?.lastName} asking`}</Text>
-						<Text
-							style={
-								styles.askText
-							}>{`about ${data?.nation?.name} (${data?.nation?.flag}):`}</Text>
-					</View>
+					{!disabled && (
+						<View style={styles.ask}>
+							<Text>{`${data?.createdBy?.firstName} ${data?.createdBy?.lastName} asking`}</Text>
+							<Text
+								style={
+									styles.askText
+								}>{`about ${data?.nation?.name} (${data?.nation?.flag}):`}</Text>
+						</View>
+					)}
 					<View>
-						<Text style={styles.questionText}>{data.question}</Text>
+						<Text
+							key={`qu-${data?.createdBy?.id}-${data?._id}`}
+							style={[
+								styles.questionText,
+								defaultStyle.textAlignRTL,
+							]}>
+							{data.question}
+						</Text>
 					</View>
 					<View style={[styles.dataContainer, defaultStyle.rtlRow]}>
 						{data?.amountOfanswers?.all > 0 &&
@@ -86,11 +97,14 @@ const QuestionComponent = ({
 							</View>
 						)}
 					</View>
+
 					<TouchableOpacity
 						onPress={() => setOpen(true)}
+						disabled={isReport}
 						style={[
 							styles.reportContainer,
 							defaultStyle.alignSelfStartRtl,
+							isReport && { opacity: 0.5 },
 						]}>
 						<View
 							style={[
@@ -111,7 +125,9 @@ const QuestionComponent = ({
 			)}
 			<FlatList
 				data={data?.answers?.options}
-				keyExtractor={(item) => item}
+				keyExtractor={(item, index) =>
+					`an-${item}-${index}-${data?.createdBy?.id}-${data?._id}`
+				}
 				renderItem={({ item, index }) => (
 					<TouchableOpacity
 						disabled={disabled}
@@ -167,7 +183,6 @@ const styles = StyleSheet.create({
 	questionText: {
 		fontWeight: 'bold',
 		fontSize: 20,
-		textAlign: 'left',
 	},
 	answersContainer: {
 		marginHorizontal: 20,

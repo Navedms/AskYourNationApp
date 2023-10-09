@@ -1,11 +1,6 @@
 import React from 'react';
 import Constants from 'expo-constants';
-import {
-	StyleSheet,
-	SafeAreaView,
-	View,
-	TouchableWithoutFeedback,
-} from 'react-native';
+import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import colors from '../config/colors';
 
 interface ScreenProps {
@@ -24,8 +19,7 @@ function Screen({
 	backgroundColor = colors.white,
 }: ScreenProps) {
 	return (
-		<SafeAreaView
-			style={[styles.screen, { backgroundColor: titleColor }, style]}>
+		<View style={[styles.screen, { backgroundColor: titleColor }, style]}>
 			{onPress ? (
 				<TouchableWithoutFeedback onPress={onPress}>
 					<View
@@ -47,7 +41,7 @@ function Screen({
 					{children}
 				</View>
 			)}
-		</SafeAreaView>
+		</View>
 	);
 }
 

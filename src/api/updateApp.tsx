@@ -24,7 +24,7 @@ export const gotoStore = () => {
 	AppLink.openInStore({
 		appName: 'Ask Your Nation',
 		appStoreId: Number('6450987187'),
-		playStoreId: 'com.appn.AskYourNation',
+		playStoreId: 'com.appn.askyournation',
 		appStoreLocale: '',
 	})
 		.then(() => {})

@@ -15,13 +15,16 @@ import navigation from '../../navigation/rootNavigation';
 import routes from '../../navigation/routes';
 import showOk from '../../components/notifications/showOk';
 import { ApiResponse } from 'apisauce';
+import Activityindicator from '../../components/Activityindicator';
 
 function ResetPasswordScreen() {
 	const [error, setError] = useState<string | undefined>(undefined);
+	const [loading, setLoading] = useState<boolean>(false);
 	const [stage, setStage] = useState<number>(1);
 	const [userId, setUserId] = useState<string>();
 
 	const handleSubmit = async (values: ForgotPassword) => {
+		setLoading(true);
 		values.email = values.email?.toLowerCase();
 		if (stage === 3) {
 			values.id = userId;
@@ -32,16 +35,22 @@ function ResetPasswordScreen() {
 				: stage === 2
 				? await authApi.enterVerificationCode(values)
 				: await authApi.changePasswordAfterReset(values);
-
-		if (result.data.error) {
-			return setError(result.data.error);
-		} else if (!result.ok) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
 			return setError('Network error: Unable to connect to the server');
+		} else if (result.data.error) {
+			setLoading(false);
+			return setError(result.data.error);
 		}
 		if (stage === 2) {
 			setUserId(result.data.id);
 		}
 		setError(undefined);
+		setLoading(false);
 		showOk(result.data.message, false);
 		if (stage === 3 && result.data.success)
 			return navigation.navigate(routes.WELCOME.name);
@@ -71,6 +80,7 @@ function ResetPasswordScreen() {
 
 	return (
 		<Screen style={styles.screen}>
+			<Activityindicator visible={loading} />
 			<Text style={styles.title}>{`Stage ${stage}: ${
 				stage === 1
 					? 'Send verification mail'

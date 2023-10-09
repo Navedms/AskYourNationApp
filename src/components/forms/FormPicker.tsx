@@ -126,7 +126,7 @@ function AppFormPicker({
 					items={list}
 					useNativeAndroidPickerStyle={false}
 					placeholder={placeholder}
-					itemKey={firstValue}
+					itemKey={firstValue || ''}
 					disabled={disabled}
 					style={{
 						inputIOS: {

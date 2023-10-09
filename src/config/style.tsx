@@ -54,6 +54,12 @@ export default {
 		right:
 			Platform.OS === 'android' && textDirection === 'rtl' ? 'auto' : 0,
 	},
+	textAlignRTL: {
+		textAlign:
+			Platform.OS === 'android' && textDirection === 'rtl'
+				? 'right'
+				: 'left',
+	},
 	marginStartRtl: (margin: number) => {
 		return Platform.OS === 'android' && textDirection === 'rtl'
 			? {

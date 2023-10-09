@@ -7,6 +7,7 @@ import Text from './Text';
 import numberFormat from '../utility/numberFormat';
 import { Nation, User } from '../api/auth';
 import defaultStyle from '../config/style';
+import Icon from './Icon';
 
 interface ScoreProps {
 	id: string;
@@ -36,11 +37,23 @@ function Score({ id, title, score, nation, rank, user }: ScoreProps) {
 				]}>
 				{rank.toString()}
 			</Text>
-			{nation?.flag && (
-				<View style={[styles.flag, defaultStyle.marginEndRtl(8)]}>
+
+			<View style={[styles.flag, defaultStyle.marginEndRtl(8)]}>
+				{nation?.flag ? (
 					<Text style={styles.flagText}>{nation.flag}</Text>
-				</View>
-			)}
+				) : (
+					<Icon
+						name='flag-variant'
+						backgroundColor={colors.light}
+						iconColor={colors.dark}
+						style={{
+							borderColor: colors.medium,
+							borderWidth: 1,
+						}}
+					/>
+				)}
+			</View>
+
 			<View>
 				<Text style={styles.title}>{title}</Text>
 				{nation?.name && (
@@ -127,6 +140,7 @@ const styles = StyleSheet.create({
 	},
 	flagText: {
 		fontSize: Platform.OS === 'android' ? 20 : 24,
+		paddingBottom: Platform.OS === 'android' ? 2 : 0,
 	},
 	medal: {
 		paddingTop: 6,

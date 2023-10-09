@@ -1,6 +1,6 @@
 {
 	"expo": {
-		"name": "AskYourNationApp",
+		"name": "Ask Your Nation",
 		"slug": "AskYourNationApp",
 		"version": "1.0.0",
 		"orientation": "portrait",
@@ -13,16 +13,25 @@
 		},
 		"assetBundlePatterns": ["**/*"],
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"bundleIdentifier": "com.appn.askyournation",
+			"buildNumber": "1.0.0"
 		},
 		"android": {
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/adaptive-icon.png",
 				"backgroundColor": "#ffffff"
-			}
+			},
+			"package": "com.appn.askyournation",
+			"versionCode": 1
 		},
 		"web": {
 			"favicon": "./assets/favicon.png"
+		},
+		"extra": {
+			"eas": {
+				"projectId": "1f41f18f-4f58-4ef1-866c-d1faffa343e4"
+			}
 		}
 	}
 }

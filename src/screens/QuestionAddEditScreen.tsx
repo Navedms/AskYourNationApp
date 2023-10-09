@@ -55,9 +55,63 @@ const defaultValues: InitialValues = {
 	answersCorrectIndex: undefined,
 };
 
+Yup.addMethod(Yup.mixed, 'uniqueIn', function (array = [], message) {
+	return this.test('uniqueIn', message, function (value) {
+		return array.filter((item: string) => item === value).length < 2;
+	});
+});
+
 const validationSchema = Yup.object().shape({
 	nation: Yup.string().required().label('Nation'),
-	question: Yup.string().required().min(40).max(200).label('Question'),
+	question: Yup.string()
+		.required()
+		.min(20)
+		.max(200)
+		.label('Question')
+		.matches(
+			/^[0-9a-zA-Z .,;:)(?&+-_=/)""'']*$/,
+			'Special characters not allowed'
+		)
+		.test(
+			'mustContain',
+			'Question must contain letters',
+			function (value: string) {
+				if (!value) return true;
+				const regExp = /[a-zA-Z]/g;
+
+				if (regExp.test(value)) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		)
+		.test(
+			'containsSpaces',
+			'Question must be at least 5 words',
+			function (value: string) {
+				if (!value) return true;
+
+				if (value.split(' ').length > 4) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		)
+		.test(
+			'containsStrudel',
+			'Special characters not allowed',
+			function (value: string) {
+				if (!value) return true;
+
+				if (value.includes('@')) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+		),
 	answersOptions: Yup.array()
 		.required()
 		.min(4)
@@ -65,8 +119,24 @@ const validationSchema = Yup.object().shape({
 		.label('Answers')
 		.of(
 			Yup.object().shape({
-				value: Yup.string().required().label('Answer').max(40).trim(),
+				value: Yup.string().required().label('Answer').max(40),
 			})
+		)
+		.test(
+			'unique',
+			'You cannot enter the same answer twice',
+			function (value) {
+				const array = value.map((a) => a.value);
+
+				if (!array) return true;
+				if (array.length !== new Set(array).size) {
+					return this.createError({
+						message: 'You cannot enter the same answer twice',
+						path: 'answersCorrectIndex',
+					});
+				}
+				return true;
+			}
 		),
 	answersCorrectIndex: Yup.number()
 		.label('Correct Answer')
@@ -121,15 +191,18 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 		const result: ApiResponse<any> = item.edit
 			? await questionApi.update(newQuestion)
 			: await questionApi.post(newQuestion);
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
-
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 		setError(undefined);
 		setLoading(false);
@@ -153,9 +226,19 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 		if (answer) {
 			if (answer === 'pass') return;
 			const result: ApiResponse<any> = await questionApi.remove(item._id);
-			if (result.status === 401 || result.status === 403) {
+			if (
+				!result.ok &&
+				result.problem === 'NETWORK_ERROR' &&
+				!result.status
+			) {
+				return setError(
+					'Network error: Unable to connect to the server'
+				);
+			} else if (result.status === 401 || result.status === 403) {
 				return logOut();
-			} else if (!result.ok) return setError(result.data.error);
+			} else if (result.data.error) {
+				return setError(result.data.error);
+			}
 			setError(undefined);
 			showOk(result.data.msg, user?.sounds);
 			return item.inScreen
@@ -167,15 +250,17 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 	};
 	const getUser = async () => {
 		const result: ApiResponse<any> = await authApi.getUser('total');
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			return setError('Network error: Unable to connect to the server');
-		}
-
-		setError(undefined);
+		} else setError(undefined);
 		setUser(result.data);
 	};
 
@@ -183,14 +268,18 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 		if (nationList.length > 0) return;
 		setLoading(true);
 		const result: ApiResponse<any> | any = await nationsApi.get();
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 
 		setError(undefined);

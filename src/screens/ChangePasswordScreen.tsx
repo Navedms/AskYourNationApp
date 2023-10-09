@@ -50,12 +50,16 @@ function ChangePasswordScreen() {
 				oldPassword,
 				newPassword
 			);
-			if (result.data.error) {
-				return setError(result.data.error);
-			} else if (!result.ok) {
+			if (
+				!result.ok &&
+				result.problem === 'NETWORK_ERROR' &&
+				!result.status
+			) {
 				return setError(
 					'Network error: Unable to connect to the server'
 				);
+			} else if (result.data.error) {
+				return setError(result.data.error);
 			}
 			setError(undefined);
 

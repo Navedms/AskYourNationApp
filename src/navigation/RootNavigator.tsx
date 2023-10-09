@@ -4,7 +4,6 @@ import { createStackNavigator } from '@react-navigation/stack';
 import routes from './routes';
 import AppNavigator from './AppNavigator';
 import AuthNavigator from './AuthNavigator';
-import WelcomeScreen from '../screens/login/WelcomeScreen';
 
 interface RootNavigatorProps {
 	user?: User;
@@ -21,7 +20,10 @@ const Stack = createStackNavigator();
 
 const RootNavigator = ({ user }: RootNavigatorProps) => (
 	<Stack.Navigator
-		screenOptions={{ headerShown: false, presentation: 'card' }}>
+		screenOptions={{
+			headerShown: false,
+			presentation: 'card',
+		}}>
 		<Stack.Screen
 			name={routes.ROOT.name}
 			component={user ? AppNavigator : AuthNavigator}

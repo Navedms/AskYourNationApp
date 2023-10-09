@@ -108,8 +108,6 @@ const ReportComponent = ({ id, handleSubmitReport }: ReportComponentProps) => {
 		useState<InitialValues>(defaultValues);
 
 	const handleSubmit = async (values: InitialValues) => {
-		console.log(values);
-
 		handleSubmitReport(id, values.reason, values.text);
 	};
 

@@ -12,15 +12,19 @@ const Header = ({ user }: { user: User }) => {
 	return (
 		<View style={[styles.container, defaultStyle.rtlRow]}>
 			<View style={[defaultStyle.rtlRow, styles.nameContainer]}>
-				<View style={[styles.flag, defaultStyle.marginEndRtl(8)]}>
-					<Text style={styles.flagText}>{user.nation?.flag}</Text>
-				</View>
+				{user.nation?.name && (
+					<View style={[styles.flag, defaultStyle.marginEndRtl(8)]}>
+						<Text style={styles.flagText}>{user.nation?.flag}</Text>
+					</View>
+				)}
 				<View>
 					<Text
 						style={
 							styles.name
 						}>{`${user.firstName} ${user.lastName}`}</Text>
-					<Text style={styles.from}>{user.nation?.name}</Text>
+					{user.nation?.name && (
+						<Text style={styles.from}>{user.nation?.name}</Text>
+					)}
 				</View>
 			</View>
 			<View>
@@ -90,6 +94,7 @@ const styles = StyleSheet.create({
 	},
 	flagText: {
 		fontSize: Platform.OS === 'android' ? 20 : 24,
+		paddingBottom: Platform.OS === 'android' ? 2 : 0,
 	},
 });
 

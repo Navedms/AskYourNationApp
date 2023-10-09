@@ -20,12 +20,12 @@ import AppModal from '../components/AppModal';
 import showOk from '../components/notifications/showOk';
 import showError from '../components/notifications/showError';
 import ReportComponent from '../components/Report';
-import { log } from 'console';
 
 export default function MainScreen({ navigation }: any) {
 	// STATEs
 	const { user, setUser, logOut } = useAuth();
 	const [error, setError] = useState<string | undefined>(undefined);
+	const [networkError, setNetworkError] = useState<boolean>(false);
 	const [rateMsg, setRateMsg] = useState<string | undefined>(undefined);
 	const [answerMsg, setAnswerMsg] = useState<string | undefined>(undefined);
 	const [loading, setLoading] = useState<boolean>(false);
@@ -36,7 +36,7 @@ export default function MainScreen({ navigation }: any) {
 		undefined
 	);
 	const [open, setOpen] = useState<boolean>(false);
-	const [valueChange, setValueChange] = useState<boolean>(false);
+	const [report, setReport] = useState<boolean>(false);
 	const [disabled, setDisabled] = useState<boolean>(false);
 	const [rateDisabled, setRateDisabled] = useState<boolean>(false);
 	const isFocused = useIsFocused();
@@ -44,31 +44,44 @@ export default function MainScreen({ navigation }: any) {
 	// APIs
 	const getUser = async () => {
 		const result: ApiResponse<any> = await authApi.getUser('total');
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			setNetworkError(true);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			return setError('Network error: Unable to connect to the server');
 		}
 		setError(undefined);
+		setNetworkError(false);
 		setUser(result.data);
 	};
 
 	const getData = async () => {
 		setLoading(true);
 		const result: ApiResponse<any> = await questionApi.get();
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			setNetworkError(true);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 
 		setError(undefined);
+		setNetworkError(false);
 		setData(result.data.list);
 		setLoading(false);
 	};
@@ -78,12 +91,17 @@ export default function MainScreen({ navigation }: any) {
 			id,
 			answerIndex,
 		});
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			return setError('Network error: Unable to connect to the server');
 		}
 
 		setError(undefined);
@@ -102,12 +120,17 @@ export default function MainScreen({ navigation }: any) {
 			id,
 			rating,
 		});
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			return setError('Network error: Unable to connect to the server');
 		}
 		setError(undefined);
 		setAnswerMsg(undefined);
@@ -120,16 +143,21 @@ export default function MainScreen({ navigation }: any) {
 			reason,
 			text,
 		});
-		if (result.status === 401 || result.status === 403) {
-			return logOut();
-		} else if (result.data.error) {
-			return showError(result.data.error, user?.sounds);
-		} else if (!result.ok) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
 			return showError(
 				'Network error: Unable to connect to the server',
 				user?.sounds
 			);
+		} else if (result.status === 401 || result.status === 403) {
+			return logOut();
+		} else if (result.data.error) {
+			return showError(result.data.error, user?.sounds);
 		}
+		setReport(true);
 		showOk(result.data.msg, user?.sounds);
 	};
 
@@ -163,6 +191,7 @@ export default function MainScreen({ navigation }: any) {
 		setAnswerMsg(undefined);
 		setRateMsg(undefined);
 		setRateDisabled(false);
+		setReport(false);
 	};
 
 	// react hooks
@@ -196,9 +225,14 @@ export default function MainScreen({ navigation }: any) {
 	// render
 
 	return (
-		<Screen titleColor={colors.primary}>
+		<Screen
+			titleColor={colors.primary}
+			// titleColor={
+			// 	user?.rank && !networkError ? colors.primary : colors.white
+			// }
+		>
+			{user?.rank && !networkError && <Header user={user} />}
 			<Activityindicator visible={loading} />
-			{user && <Header user={user} />}
 			{user?.points?.questions === 0 ? (
 				<NoResults
 					title='First things first!'
@@ -208,9 +242,7 @@ export default function MainScreen({ navigation }: any) {
 						<Button
 							title='Add New Question'
 							onPress={() =>
-								navigation.navigate(
-									routes.QUESTION_ADD_EDIT.name
-								)
+								navigation.navigate(routes.MY_QUESTIONS.name)
 							}
 						/>
 					}
@@ -227,6 +259,7 @@ export default function MainScreen({ navigation }: any) {
 									userAnswer={userAnswer}
 									showAnswers={showAnswers}
 									setOpen={setOpen}
+									isReport={report}
 								/>
 							)}
 							{answerMsg && (
@@ -259,14 +292,24 @@ export default function MainScreen({ navigation }: any) {
 						</View>
 					) : (
 						<NoResults
-							title='No more questions...'
-							text='Looks like you have answered all the questions for now...'
-							iconName='comment-check'
+							title={
+								networkError ? error : 'No more questions...'
+							}
+							text={
+								networkError
+									? 'Please try again later...'
+									: 'Looks like you have answered all the questions for now...'
+							}
+							iconName={
+								networkError ? 'wifi-off' : 'comment-check'
+							}
 							button={
-								<Button
-									title='Check for more'
-									onPress={() => getData()}
-								/>
+								networkError ? undefined : (
+									<Button
+										title='Check for more'
+										onPress={() => getData()}
+									/>
+								)
 							}
 						/>
 					)}

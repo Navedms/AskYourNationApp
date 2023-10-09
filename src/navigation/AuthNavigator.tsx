@@ -8,26 +8,24 @@ import routes from './routes';
 
 const Stack = createStackNavigator();
 const AuthNavigator = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerStyle: { backgroundColor: colors.primary },
-      headerTintColor: colors.white,
-    }}
-  >
-    <Stack.Screen
-      name={routes.WELCOME.name}
-      component={WelcomeScreen}
-      options={{ headerShown: false, title: routes.WELCOME.title }}
-    />
-    <Stack.Screen
-      name={routes.FORGOT_PASSWORD.name}
-      component={ForgotPasswordScreen}
-      options={{
-        title: routes.FORGOT_PASSWORD.title,
-        headerStyle: { backgroundColor: colors.secondary },
-      }}
-    />
-  </Stack.Navigator>
+	<Stack.Navigator
+		screenOptions={{
+			headerShown: false,
+		}}>
+		<Stack.Screen
+			name={routes.WELCOME.name}
+			component={WelcomeScreen}
+			options={{ headerShown: false, title: routes.WELCOME.title }}
+		/>
+		<Stack.Screen
+			name={routes.FORGOT_PASSWORD.name}
+			component={ForgotPasswordScreen}
+			options={{
+				title: routes.FORGOT_PASSWORD.title,
+				headerStyle: { backgroundColor: colors.secondary },
+			}}
+		/>
+	</Stack.Navigator>
 );
 
 export default AuthNavigator;

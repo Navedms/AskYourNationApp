@@ -30,8 +30,14 @@ interface InitialValues {
 }
 
 const validationSchema = Yup.object().shape({
-	firstName: Yup.string().required().label('First Name'),
-	lastName: Yup.string().required().label('Last Name'),
+	firstName: Yup.string()
+		.required()
+		.label('First Name')
+		.matches(/^[a-zA-Z ]*$/, 'Should contain only alphabets'),
+	lastName: Yup.string()
+		.required()
+		.label('Last Name')
+		.matches(/^[a-zA-Z ]*$/, 'Should contain only alphabets'),
 });
 
 function ProfileEditScreen({ navigation, route }) {
@@ -51,7 +57,6 @@ function ProfileEditScreen({ navigation, route }) {
 
 	const handleSubmit = async (values: InitialValues) => {
 		values.id = user.id;
-		console.log(values.nation);
 
 		if (values.nation) {
 			const tempNation = nationList.find(
@@ -63,12 +68,16 @@ function ProfileEditScreen({ navigation, route }) {
 		const result: ApiResponse<any> | any = await authApi.update(
 			values as User
 		);
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			return setError('Network error: Unable to connect to the server');
 		}
 		showOk(result.data.msg, user?.sounds);
 		setError(undefined);
@@ -81,14 +90,18 @@ function ProfileEditScreen({ navigation, route }) {
 		if (nationList.length > 0) return;
 		setLoading(true);
 		const result: ApiResponse<any> | any = await nationsApi.get();
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 		setLoading(false);
 		setError(undefined);
@@ -165,10 +178,10 @@ function ProfileEditScreen({ navigation, route }) {
 							})
 						}
 					/>
-					{nationSelectList.length > 0 && initialValues.nation && (
+					{nationSelectList.length > 0 && (
 						<FormPicker
 							name='nation'
-							key='my-nation'
+							key={`my-nation-${initialValues.nation}`}
 							list={nationSelectList}
 							fixedPadding={40}
 							placeholder={{
@@ -183,7 +196,13 @@ function ProfileEditScreen({ navigation, route }) {
 									[name]: value,
 								})
 							}
-							firstValue={initialValues.nation}
+							firstValue={
+								typeof initialValues.nation === 'object' &&
+								initialValues.nation !== null &&
+								!Array.isArray(initialValues.nation)
+									? initialValues.nation?.name
+									: initialValues.nation
+							}
 						/>
 					)}
 					<View style={styles.separator}></View>

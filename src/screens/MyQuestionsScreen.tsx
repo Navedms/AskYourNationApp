@@ -28,15 +28,19 @@ function MyQuestionsScreen({ navigation, route }) {
 	const getMyQuestions = async () => {
 		setLoading(true);
 		const result: ApiResponse<any> = await questionApi.getMyQuestions();
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
-
+			setData([]);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 		setError(undefined);
 		setLoading(false);
@@ -65,12 +69,16 @@ function MyQuestionsScreen({ navigation, route }) {
 		if (answer && item._id) {
 			if (answer === 'pass') return;
 			const result: ApiResponse<any> = await questionApi.remove(item._id);
-			if (result.status === 401 || result.status === 403) {
-				return logOut();
-			} else if (!result.ok)
+			if (
+				!result.ok &&
+				result.problem === 'NETWORK_ERROR' &&
+				!result.status
+			)
 				return showError(result.data.error, user?.sounds);
 			showOk(result.data.msg, user?.sounds);
 			setData(data.filter((item) => item._id !== result.data.id));
+		} else if (result.status === 401 || result.status === 403) {
+			return logOut();
 		}
 	};
 
@@ -134,6 +142,7 @@ const styles = StyleSheet.create({
 	},
 	flagText: {
 		fontSize: Platform.OS === 'android' ? 20 : 24,
+		paddingBottom: Platform.OS === 'android' ? 2 : 0,
 	},
 });
 

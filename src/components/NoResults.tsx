@@ -46,6 +46,7 @@ const styles = StyleSheet.create({
 		backgroundColor: colors.white,
 		width: '100%',
 		zIndex: 2,
+		padding: 20,
 	},
 	fullScreen: {
 		flexGrow: 1,

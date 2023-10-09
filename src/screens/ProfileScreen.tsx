@@ -28,14 +28,18 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 	const getUser = async () => {
 		setLoading(true);
 		const result: ApiResponse<any> = await authApi.getUser('total');
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 		setLoading(false);
 		setError(undefined);
@@ -55,16 +59,20 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 			const result: ApiResponse<any> = await authApi.deleteAccount(
 				user.id
 			);
-			if (result.status === 401 || result.status === 403) {
-				return logOut();
-			} else if (result.data.error) {
-				setLoading(false);
-				return setError(result.data.error);
-			} else if (!result.ok) {
+			if (
+				!result.ok &&
+				result.problem === 'NETWORK_ERROR' &&
+				!result.status
+			) {
 				setLoading(false);
 				return setError(
 					'Network error: Unable to connect to the server'
 				);
+			} else if (result.status === 401 || result.status === 403) {
+				return logOut();
+			} else if (result.data.error) {
+				setLoading(false);
+				return setError(result.data.error);
 			}
 			setLoading(false);
 			setError(undefined);
@@ -81,16 +89,20 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 				user.id,
 				value
 			);
-			if (result.status === 401 || result.status === 403) {
-				return logOut();
-			} else if (result.data.error) {
-				setLoading(false);
-				return setError(result.data.error);
-			} else if (!result.ok) {
+			if (
+				!result.ok &&
+				result.problem === 'NETWORK_ERROR' &&
+				!result.status
+			) {
 				setLoading(false);
 				return setError(
 					'Network error: Unable to connect to the server'
 				);
+			} else if (result.status === 401 || result.status === 403) {
+				return logOut();
+			} else if (result.data.error) {
+				setLoading(false);
+				return setError(result.data.error);
 			}
 			setLoading(false);
 			setError(undefined);
@@ -106,87 +118,124 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 		<Screen style={styles.screen}>
 			<Activityindicator visible={loading} />
 			<View style={styles.main}>
-				<CardItem
-					title={`${user?.firstName} ${user?.lastName}`}
-					subTitle={user?.nation?.name}
-					edit
-					IconComponent={
-						<View style={styles.flag}>
-							<Text style={styles.flagText}>
-								{user?.nation?.flag}
-							</Text>
-						</View>
-					}
-					onPress={() =>
-						navigation.navigate(routes.PROFILE_EDIT.name, {
-							...user,
-							sounds: sounds,
-						})
-					}
-				/>
-				<CardItem
-					title={user.email}
-					IconComponent={
-						<Icon name='email' backgroundColor={colors.primary} />
-					}
-				/>
-				<CardItem
-					title='Change Password'
-					edit
-					IconComponent={
-						<Icon
-							name='lock-open'
-							backgroundColor={colors.primary}
-						/>
-					}
-					onPress={() =>
-						navigation.navigate(routes.CHANGE_PASSWORD.name, {
-							...user,
-							sounds: sounds,
-						})
-					}
-				/>
-				<CardItem
-					title={`Your Rank: ${numberOrdinal(user?.rank)}`}
-					subTitle={`points: ${numberFormat(user?.points?.total)}`}
-					IconComponent={
-						<Icon name='medal' backgroundColor={colors.secondary} />
-					}
-				/>
-				<CardItem
-					title={`Answered correctly ${numberFormat(
-						user?.points?.answers
-					)} questions`}
-					subTitle={`You write ${numberFormat(
-						user?.points?.questions
-					)} questions`}
-					IconComponent={
-						<Icon name='star' backgroundColor={colors.secondary} />
-					}
-				/>
-				<CardItem
-					title='Sound Effects'
-					IconComponent={
-						<Icon
-							name='volume-high'
-							backgroundColor={colors.primary}
-						/>
-					}
-					SwitchComponent={
-						<Switch
-							key='sounds'
-							trackColor={{
-								false: colors.medium,
-								true: colors.primary,
-							}}
-							disabled={loading}
-							thumbColor={colors.white}
-							ios_backgroundColor={colors.medium}
-							onValueChange={handleSounds}
-							value={sounds}
-						/>
-					}
-				/>
+				{user?.firstName && (
+					<CardItem
+						title={`${user?.firstName} ${user?.lastName}`}
+						subTitle={user?.nation?.name}
+						edit
+						IconComponent={
+							user?.nation?.flag ? (
+								<View style={styles.flag}>
+									<Text style={styles.flagText}>
+										{user?.nation?.flag}
+									</Text>
+								</View>
+							) : (
+								<Icon
+									name='account'
+									backgroundColor={colors.primary}
+								/>
+							)
+						}
+						onPress={() =>
+							navigation.navigate(routes.PROFILE_EDIT.name, {
+								...user,
+								sounds: sounds,
+							})
+						}
+					/>
+				)}
+				{user?.firstName && (
+					<CardItem
+						title={user.email}
+						IconComponent={
+							<Icon
+								name='email'
+								backgroundColor={colors.primary}
+							/>
+						}
+					/>
+				)}
+				{user?.firstName && (
+					<CardItem
+						title='Change Password'
+						edit
+						IconComponent={
+							<Icon
+								name='lock-open'
+								backgroundColor={colors.primary}
+							/>
+						}
+						onPress={() =>
+							navigation.navigate(routes.CHANGE_PASSWORD.name, {
+								...user,
+								sounds: sounds,
+							})
+						}
+					/>
+				)}
+				{user?.rank && (
+					<CardItem
+						title={`Your Rank: ${numberOrdinal(user?.rank)}`}
+						subTitle={`points: ${numberFormat(
+							user?.points?.total
+						)}`}
+						IconComponent={
+							<Icon
+								name='medal'
+								backgroundColor={colors.secondary}
+							/>
+						}
+					/>
+				)}
+				{user?.points && (
+					<CardItem
+						title={`Answered correctly ${numberFormat(
+							user?.points?.answers
+						)} questions`}
+						subTitle={`You write ${numberFormat(
+							user?.points?.questions
+						)} questions`}
+						IconComponent={
+							<Icon
+								name='star'
+								backgroundColor={colors.secondary}
+							/>
+						}
+					/>
+				)}
+				{user?.rank && (
+					<CardItem
+						title='Sound Effects'
+						IconComponent={
+							<Icon
+								name='volume-high'
+								backgroundColor={colors.primary}
+							/>
+						}
+						SwitchComponent={
+							<Switch
+								key='sounds'
+								trackColor={{
+									false: colors.medium,
+									true: colors.primary,
+								}}
+								disabled={loading}
+								thumbColor={colors.white}
+								ios_backgroundColor={colors.medium}
+								onValueChange={handleSounds}
+								value={sounds}
+							/>
+						}
+					/>
+				)}
+				{error && (
+					<View style={styles.errorContainer}>
+						<Text style={[defaultStyle.errorMsg, styles.error]}>
+							{error}
+						</Text>
+					</View>
+				)}
 			</View>
 			<CardItem
 				title='Sign Out'
@@ -227,6 +276,16 @@ const styles = StyleSheet.create({
 	},
 	flagText: {
 		fontSize: Platform.OS === 'android' ? 20 : 24,
+		paddingBottom: Platform.OS === 'android' ? 2 : 0,
+	},
+	error: {
+		color: colors.delete,
+		textAlign: 'center',
+	},
+	errorContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
 });
 

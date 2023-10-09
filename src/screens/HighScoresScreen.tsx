@@ -40,14 +40,18 @@ function HighScoresScreen({ navigation }: HighScoresScreenProps) {
 	// APIs
 	const getUser = async () => {
 		const result: ApiResponse<any> = await authApi.getUser('total');
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 
 		setError(undefined);
@@ -60,14 +64,18 @@ function HighScoresScreen({ navigation }: HighScoresScreenProps) {
 
 		setLoading(true);
 		const result: ApiResponse<any> = await authApi.getTop(tempFilters);
-		if (result.status === 401 || result.status === 403) {
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
 			return logOut();
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
-		} else if (!result.ok) {
-			setLoading(false);
-			return setError('Network error: Unable to connect to the server');
 		}
 
 		setError(undefined);
