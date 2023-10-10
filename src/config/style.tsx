@@ -60,6 +60,12 @@ export default {
 				? 'right'
 				: 'left',
 	},
+	textAlignJustifyRTL: {
+		textAlign:
+			Platform.OS === 'android' && textDirection === 'rtl'
+				? 'right'
+				: 'justify',
+	},
 	marginStartRtl: (margin: number) => {
 		return Platform.OS === 'android' && textDirection === 'rtl'
 			? {
@@ -73,5 +79,17 @@ export default {
 					marginStart: margin,
 			  }
 			: { marginEnd: margin };
+	},
+	paddingRTL: (left: number, right: number) => {
+		return {
+			paddingLeft:
+				Platform.OS === 'android' && textDirection === 'rtl'
+					? right
+					: left,
+			paddingRight:
+				Platform.OS === 'android' && textDirection === 'rtl'
+					? left
+					: right,
+		};
 	},
 };

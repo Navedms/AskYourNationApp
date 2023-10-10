@@ -22,6 +22,7 @@ export interface User {
 	firstName?: string;
 	lastName?: string;
 	password?: string;
+	terms?: boolean;
 	nation?: Nation;
 	active?: boolean;
 	points?: Points;
