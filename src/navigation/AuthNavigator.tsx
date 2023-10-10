@@ -8,10 +8,7 @@ import routes from './routes';
 
 const Stack = createStackNavigator();
 const AuthNavigator = () => (
-	<Stack.Navigator
-		screenOptions={{
-			headerShown: false,
-		}}>
+	<Stack.Navigator>
 		<Stack.Screen
 			name={routes.WELCOME.name}
 			component={WelcomeScreen}
@@ -22,7 +19,8 @@ const AuthNavigator = () => (
 			component={ForgotPasswordScreen}
 			options={{
 				title: routes.FORGOT_PASSWORD.title,
-				headerStyle: { backgroundColor: colors.secondary },
+				headerStyle: { backgroundColor: colors.primary },
+				headerTintColor: colors.white,
 			}}
 		/>
 	</Stack.Navigator>

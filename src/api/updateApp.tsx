@@ -23,7 +23,7 @@ export const fetchPackageJsonContentVersion = async () => {
 export const gotoStore = () => {
 	AppLink.openInStore({
 		appName: 'Ask Your Nation',
-		appStoreId: Number('6450987187'),
+		appStoreId: Number('6468986823'),
 		playStoreId: 'com.appn.askyournation',
 		appStoreLocale: '',
 	})
