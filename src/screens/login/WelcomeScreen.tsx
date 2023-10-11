@@ -216,6 +216,7 @@ function WelcomeScreen({ route }: any) {
 							onChange={(name: string, value: string) => {
 								setSignMode(value);
 								setError(undefined);
+								setTerms(false);
 								setInitialValues(
 									value === 'SignUp'
 										? {

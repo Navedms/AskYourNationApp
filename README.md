@@ -9,8 +9,8 @@
 
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/1.png"></p><br><br>
 <p align="center"><img width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/2.png"></p><br><br>
-<p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/3.png"></p><br><br>
-<p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/4.png"></p><br><br>
+<p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/7.png"></p><br><br>
+<p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/8.png"></p><br><br>
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/5.png"></p><br><br>
 <p align="center"><img width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/6.png"></p><br><br>
 

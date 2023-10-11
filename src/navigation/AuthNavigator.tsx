@@ -19,7 +19,9 @@ const AuthNavigator = () => (
 			component={ForgotPasswordScreen}
 			options={{
 				title: routes.FORGOT_PASSWORD.title,
-				headerStyle: { backgroundColor: colors.primary },
+				headerStyle: {
+					backgroundColor: colors.primary,
+				},
 				headerTintColor: colors.white,
 			}}
 		/>
