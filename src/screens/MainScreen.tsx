@@ -137,11 +137,17 @@ export default function MainScreen({ navigation }: any) {
 		setRateMsg(result.data.msg);
 	};
 
-	const reportQuestion = async (id: string, reason: string, text: string) => {
+	const reportQuestion = async (
+		id: string,
+		reason: string,
+		text: string,
+		blockUser: boolean
+	) => {
 		const result: ApiResponse<any> = await questionApi.report({
 			id,
 			reason,
 			text,
+			blockUser,
 		});
 		if (
 			!result.ok &&
@@ -174,16 +180,25 @@ export default function MainScreen({ navigation }: any) {
 		postRate(id, rating);
 	};
 
-	const handleSubmitReport = (id: string, reason: string, text: string) => {
+	const handleSubmitReport = (
+		id: string,
+		reason: string,
+		text: string,
+		blockUser: boolean
+	) => {
 		setOpen(false);
-		reportQuestion(id, reason, text);
+		reportQuestion(id, reason, text, blockUser);
 	};
 
 	const handleSkipOrNext = () => {
 		const newData = data.filter(
 			(item) => item._id !== data[rendomIndex - 1]?._id
 		);
-		setData(newData);
+		if (report) {
+			setData([]);
+		} else {
+			setData(newData);
+		}
 		setRendomIndex(Math.floor(Math.random() * data.length) + 1);
 		setDisabled(false);
 		setUserAnswer(undefined);
@@ -226,11 +241,9 @@ export default function MainScreen({ navigation }: any) {
 
 	return (
 		<Screen
-			titleColor={colors.primary}
-			// titleColor={
-			// 	user?.rank && !networkError ? colors.primary : colors.white
-			// }
-		>
+			titleColor={
+				user?.rank && !networkError ? colors.primary : colors.white
+			}>
 			{user?.rank && !networkError && <Header user={user} />}
 			<Activityindicator visible={loading} />
 			{user?.points?.questions === 0 ? (

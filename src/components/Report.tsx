@@ -4,21 +4,34 @@ import * as Yup from 'yup';
 
 import colors from '../config/colors';
 import Text from './Text';
-import { Form, FormField, FormPicker, SubmitButton } from './forms';
+import {
+	Form,
+	FormField,
+	FormPicker,
+	FormSelectItem,
+	SubmitButton,
+} from './forms';
 
 interface ReportComponentProps {
 	id: string;
-	handleSubmitReport: (id: string, reason: string, text: string) => void;
+	handleSubmitReport: (
+		id: string,
+		reason: string,
+		text: string,
+		blockUser: boolean
+	) => void;
 }
 
 interface InitialValues {
 	reason: string;
 	text: string;
+	blockUser: boolean;
 }
 
 const defaultValues: InitialValues = {
 	reason: '',
 	text: '',
+	blockUser: false,
 };
 
 const validationSchema = Yup.object().shape({
@@ -108,7 +121,12 @@ const ReportComponent = ({ id, handleSubmitReport }: ReportComponentProps) => {
 		useState<InitialValues>(defaultValues);
 
 	const handleSubmit = async (values: InitialValues) => {
-		handleSubmitReport(id, values.reason, values.text);
+		handleSubmitReport(
+			id,
+			values.reason,
+			values.text,
+			initialValues.blockUser
+		);
 	};
 
 	return (
@@ -151,6 +169,17 @@ const ReportComponent = ({ id, handleSubmitReport }: ReportComponentProps) => {
 							[name]: value,
 						})
 					}
+				/>
+				<FormSelectItem
+					name='blockUser'
+					title='Do not display more questions from this user (Block)'
+					onPress={(value: boolean, name: string) =>
+						setInitialValues({
+							...initialValues,
+							[name]: value,
+						})
+					}
+					firstValue={initialValues.blockUser}
 				/>
 				<View style={styles.separator}></View>
 				<SubmitButton style={[styles.submit]} title='Submit' />

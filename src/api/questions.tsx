@@ -48,6 +48,7 @@ interface ReportProps {
 	id: string;
 	reason: string;
 	text: string;
+	blockUser: boolean;
 }
 
 export interface ShowAnswers {
@@ -76,11 +77,12 @@ const rating = ({ id, rating }: RatingProps) =>
 		rating,
 	});
 
-const report = ({ id, reason, text }: ReportProps) =>
+const report = ({ id, reason, text, blockUser }: ReportProps) =>
 	client.patch(`${endpoint}/report`, {
 		id,
 		reason,
 		text,
+		blockUser,
 	});
 
 const remove = (id: string) => client.delete(`${endpoint}?id=${id}`);
