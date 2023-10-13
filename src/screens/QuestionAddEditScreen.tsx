@@ -207,8 +207,8 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 		setError(undefined);
 		setLoading(false);
 		showOk(result.data.msg, user?.sounds);
-		setResetFields(!resetFields);
 		setInitialValues(defaultValues);
+		setResetFields(!resetFields);
 		getUser();
 		return item.inScreen
 			? navigation.navigate(routes.MY_QUESTIONS_MAIN.name)

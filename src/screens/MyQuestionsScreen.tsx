@@ -17,9 +17,10 @@ import questionApi, { Question } from '../api/questions';
 import Text from '../components/Text';
 import { useIsFocused } from '@react-navigation/native';
 import useAuth from '../auth/useAuth';
+import authApi from '../api/auth';
 
 function MyQuestionsScreen({ navigation, route }) {
-	const { user, logOut } = useAuth();
+	const { user, logOut, setUser } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [data, setData] = useState<Question[]>([]);
@@ -40,11 +41,28 @@ function MyQuestionsScreen({ navigation, route }) {
 		} else if (result.data.error) {
 			setLoading(false);
 			setData([]);
+			getUser();
 			return setError(result.data.error);
 		}
 		setError(undefined);
 		setLoading(false);
 		setData(result.data.list);
+	};
+
+	const getUser = async () => {
+		const result: ApiResponse<any> = await authApi.getUser('total');
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 401 || result.status === 403) {
+			return logOut();
+		} else if (result.data.error) {
+			return setError(result.data.error);
+		} else setError(undefined);
+		setUser(result.data);
 	};
 
 	useEffect(() => {
@@ -77,8 +95,6 @@ function MyQuestionsScreen({ navigation, route }) {
 				return showError(result.data.error, user?.sounds);
 			showOk(result.data.msg, user?.sounds);
 			setData(data.filter((item) => item._id !== result.data.id));
-		} else if (result.status === 401 || result.status === 403) {
-			return logOut();
 		}
 	};
 
