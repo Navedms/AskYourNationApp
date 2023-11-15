@@ -2,23 +2,53 @@
  <h5 align="center">Celebrate the diversity of our world!</h5>
 
   <p align="center">
-    Welcome to AskYourNation, the app where you become the quizmaster! Immerse yourself in the world of global trivia as you ask and answer questions about nations from all corners of the globe. Share your knowledge, learn fascinating facts, and get to know other people"s customs and cultures.
+    Welcome to AskYourNation, the app where you become the quizmaster! Immerse yourself in the world of global trivia as you ask and answer questions about nations from all corners of the globe. Share your knowledge, learn fascinating facts, and get to know other people's customs and cultures.
 </p>
 
 ## The app in pictures
 
-<p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/1.png"></p><br><br>
+<div style="background: #f2f2f2;"><p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/1.png"></p><br><br>
 <p align="center"><img width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/2.png"></p><br><br>
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/7.png"></p><br><br>
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/8.png"></p><br><br>
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/5.png"></p><br><br>
-<p align="center"><img width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/6.png"></p><br><br>
+<p align="center"><img width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/6.png"></p><br><br></div>
 
 ### Built With
 
-This react-native app was built with these Api and Libraries:
+This Full stack app was built with these Api and Libraries:
 
+Server:
+https://github.com/Navedms/AskYourNation
+
+-   [Node.js]
+-   [TypeScript]
+-   [MongoDB Atlas]
+-   [cyclic.sh]
 -   [Restcountries.com API]
+-   [google-cloud/storage]
+-   [@google-cloud/translate]
+-   [axios]
+-   [bcrypt]
+-   [chalk]
+-   [cookie-parser]
+-   [dotenv]
+-   [express]
+-   [fs]
+-   [jsonwebtoken]
+-   [mongoose]
+-   [multer]
+-   [nodemailer]
+-   [path]
+-   [sharp]
+-   [uuid]
+-   and more...
+
+Client:
+https://github.com/Navedms/AskYourNationApp
+
+-   [react-native]
+-   [TypeScript]
 -   [react-native-async-storage]
 -   [react-native-community/picker]
 -   [react-navigation]
@@ -35,6 +65,7 @@ This react-native app was built with these Api and Libraries:
 -   [lottie-react-native]
 -   [react-native-app-link]
 -   [react-native-flash-message]
+-   [react-native-google-mobile-ads]
 -   [yup]
 -   and more...
 
