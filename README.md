@@ -7,7 +7,7 @@
 
 ## The app in pictures
 
-<p align="center" style="border: 1px solid;"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/1.png"></p><br><br>
+<div style="border: 1px solid;"><p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/1.png"></p></div><br><br>
 <p align="center"><img width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/2.png"></p><br><br>
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/7.png"></p><br><br>
 <p align="center"><img style="margin: 30px;" width="250" src="https://github.com/Navedms/AskYourNationApp/blob/main/assets/screenShots/8.png"></p><br><br>
