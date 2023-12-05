@@ -57,9 +57,19 @@ export interface ShowAnswers {
 	userIndex: number;
 }
 
+export interface Languages {
+	name: string;
+	code: string;
+}
+
 const get = () => client.get(endpoint);
 
 const getMyQuestions = () => client.get(`${endpoint}/my-questions`);
+
+const getSupportedLanguages = () => client.get(`${endpoint}/languages`);
+
+const translate = ({ text }: { text: string }) =>
+	client.post(`${endpoint}/translate`, { text });
 
 const post = (data: Question) => client.post(`${endpoint}`, data);
 
@@ -90,6 +100,8 @@ const remove = (id: string) => client.delete(`${endpoint}?id=${id}`);
 export default {
 	get,
 	getMyQuestions,
+	getSupportedLanguages,
+	translate,
 	post,
 	update,
 	answer,

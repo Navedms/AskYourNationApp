@@ -1,5 +1,5 @@
 import React, { ComponentProps } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import colors from '../config/colors';
@@ -13,6 +13,7 @@ export interface AppButtonProps {
 	color?: string;
 	backgroundColor?: string;
 	icon?: ComponentProps<typeof MaterialCommunityIcons>['name'];
+	image?: string;
 	iconColor?: string;
 	iconSize?: number;
 	style?: Object;
@@ -29,6 +30,7 @@ function AppButton({
 	icon,
 	iconColor = 'white',
 	iconSize = 22,
+	image,
 	style,
 	disabled,
 }: AppButtonProps) {
@@ -45,13 +47,26 @@ function AppButton({
 				style,
 			]}
 			onPress={disabled ? undefined : onPress}>
+			{image && (
+				<Image
+					source={
+						image === 'apple'
+							? require(`../../assets/apple.png`)
+							: require(`../../assets/google.png`)
+					}
+					style={styles.image}
+				/>
+			)}
 			{title && (
 				<Text
-					style={{
-						color: colors[color],
-						fontWeight: fontWeight,
-						fontSize: fontSize,
-					}}>
+					style={[
+						{
+							color: colors[color],
+							fontWeight: fontWeight,
+							fontSize: fontSize,
+						},
+						image && { paddingLeft: 30 },
+					]}>
 					{title}
 				</Text>
 			)}
@@ -79,6 +94,12 @@ const styles = StyleSheet.create({
 	},
 	icon: {
 		paddingLeft: 6,
+	},
+	image: {
+		position: 'absolute',
+		width: 30,
+		height: 30,
+		left: 20,
 	},
 });
 

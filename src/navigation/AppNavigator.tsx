@@ -12,7 +12,9 @@ import HighScoresNavigator from './HighScoresNavigator';
 import MainScreen from '../screens/MainScreen';
 import QuestionAddEditScreen from '../screens/QuestionAddEditScreen';
 import routes from './routes';
-import PersonalSpaceNavigator from './PersonalSpaceNavigator';
+import MyQuestionsScreen from '../screens/MyQuestionsScreen';
+import ProfileNavigator from './ProfileNavigator';
+import MyQuestionsNavigator from './MyQuestionsNavigator';
 
 const Tab = createBottomTabNavigator();
 const { textDirection } = getLocales()[0];
@@ -32,17 +34,65 @@ const AppNavigator = () => {
 					},
 				}}>
 				<Tab.Screen
-					name={routes.PERSONAL.name}
-					component={PersonalSpaceNavigator}
+					name={routes.PROFILE.name}
+					component={ProfileNavigator}
 					options={{
-						title: routes.PERSONAL.title,
+						title: routes.PROFILE.title,
 						tabBarIcon: ({ color, size, focused }) => {
 							const iconName = focused
-								? routes.PERSONAL.activeIcon
-								: routes.PERSONAL.icon;
+								? routes.PROFILE.activeIcon
+								: routes.PROFILE.icon;
 							return (
 								<FontAwesome5
 									name={iconName}
+									color={color}
+									size={size}
+								/>
+							);
+						},
+					}}
+				/>
+				<Tab.Screen
+					name={routes.MY_QUESTIONS.name}
+					component={MyQuestionsNavigator}
+					options={{
+						title: routes.MY_QUESTIONS.title,
+						tabBarIcon: ({ color, size, focused }) => {
+							const iconName = focused
+								? routes.MY_QUESTIONS.activeIcon
+								: routes.MY_QUESTIONS.icon;
+							return (
+								<MaterialCommunityIcons
+									name={iconName}
+									style={
+										focused && {
+											transform: [{ rotate: '10deg' }],
+										}
+									}
+									color={color}
+									size={size}
+								/>
+							);
+						},
+					}}
+				/>
+				<Tab.Screen
+					name={routes.QUESTION_ADD.name}
+					component={QuestionAddEditScreen}
+					options={{
+						title: routes.QUESTION_ADD.title,
+						tabBarIcon: ({ color, size, focused }) => {
+							const iconName = focused
+								? routes.QUESTION_ADD.activeIcon
+								: routes.QUESTION_ADD.icon;
+							return (
+								<MaterialCommunityIcons
+									name={iconName}
+									style={
+										focused && {
+											transform: [{ rotate: '-45deg' }],
+										}
+									}
 									color={color}
 									size={size}
 								/>
@@ -64,7 +114,7 @@ const AppNavigator = () => {
 									name={iconName}
 									style={
 										focused && {
-											transform: [{ rotate: '-20deg' }],
+											transform: [{ scaleX: -1 }],
 										}
 									}
 									color={color}
@@ -73,30 +123,6 @@ const AppNavigator = () => {
 							) : (
 								<Fontisto
 									name={iconName}
-									color={color}
-									size={size}
-								/>
-							);
-						},
-					}}
-				/>
-				<Tab.Screen
-					name={routes.MY_QUESTIONS.name}
-					component={QuestionAddEditScreen}
-					options={{
-						title: routes.QUESTION_ADD_EDIT.title,
-						tabBarIcon: ({ color, size, focused }) => {
-							const iconName = focused
-								? routes.QUESTION_ADD_EDIT.activeIcon
-								: routes.QUESTION_ADD_EDIT.icon;
-							return (
-								<MaterialCommunityIcons
-									name={iconName}
-									style={
-										focused && {
-											transform: [{ scaleX: -1 }],
-										}
-									}
 									color={color}
 									size={size}
 								/>
@@ -134,6 +160,7 @@ const AppNavigator = () => {
 	} else {
 		return (
 			<Tab.Navigator
+				initialRouteName={routes.MAIN.name}
 				screenOptions={{
 					headerShown: false,
 					tabBarLabelStyle: {
@@ -169,30 +196,6 @@ const AppNavigator = () => {
 					}}
 				/>
 				<Tab.Screen
-					name={routes.MY_QUESTIONS.name}
-					component={QuestionAddEditScreen}
-					options={{
-						title: routes.QUESTION_ADD_EDIT.title,
-						tabBarIcon: ({ color, size, focused }) => {
-							const iconName = focused
-								? routes.QUESTION_ADD_EDIT.activeIcon
-								: routes.QUESTION_ADD_EDIT.icon;
-							return (
-								<MaterialCommunityIcons
-									name={iconName}
-									style={
-										focused && {
-											transform: [{ scaleX: -1 }],
-										}
-									}
-									color={color}
-									size={size}
-								/>
-							);
-						},
-					}}
-				/>
-				<Tab.Screen
 					name={routes.HIGH_SCORES.name}
 					component={HighScoresNavigator}
 					options={{
@@ -206,7 +209,7 @@ const AppNavigator = () => {
 									name={iconName}
 									style={
 										focused && {
-											transform: [{ rotate: '-20deg' }],
+											transform: [{ scaleX: -1 }],
 										}
 									}
 									color={color}
@@ -223,14 +226,62 @@ const AppNavigator = () => {
 					}}
 				/>
 				<Tab.Screen
-					name={routes.PERSONAL.name}
-					component={PersonalSpaceNavigator}
+					name={routes.QUESTION_ADD.name}
+					component={QuestionAddEditScreen}
 					options={{
-						title: routes.PERSONAL.title,
+						title: routes.QUESTION_ADD.title,
 						tabBarIcon: ({ color, size, focused }) => {
 							const iconName = focused
-								? routes.PERSONAL.activeIcon
-								: routes.PERSONAL.icon;
+								? routes.QUESTION_ADD.activeIcon
+								: routes.QUESTION_ADD.icon;
+							return (
+								<MaterialCommunityIcons
+									name={iconName}
+									style={
+										focused && {
+											transform: [{ rotate: '-45deg' }],
+										}
+									}
+									color={color}
+									size={size}
+								/>
+							);
+						},
+					}}
+				/>
+				<Tab.Screen
+					name={routes.MY_QUESTIONS.name}
+					component={MyQuestionsNavigator}
+					options={{
+						title: routes.MY_QUESTIONS.title,
+						tabBarIcon: ({ color, size, focused }) => {
+							const iconName = focused
+								? routes.MY_QUESTIONS.activeIcon
+								: routes.MY_QUESTIONS.icon;
+							return (
+								<MaterialCommunityIcons
+									name={iconName}
+									style={
+										focused && {
+											transform: [{ rotate: '10deg' }],
+										}
+									}
+									color={color}
+									size={size}
+								/>
+							);
+						},
+					}}
+				/>
+				<Tab.Screen
+					name={routes.PROFILE.name}
+					component={ProfileNavigator}
+					options={{
+						title: routes.PROFILE.title,
+						tabBarIcon: ({ color, size, focused }) => {
+							const iconName = focused
+								? routes.PROFILE.activeIcon
+								: routes.PROFILE.icon;
 							return (
 								<FontAwesome5
 									name={iconName}

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Platform, StyleSheet, Switch, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
+import {
+	BannerAd,
+	BannerAdSize,
+	TestIds,
+} from 'react-native-google-mobile-ads';
 
 import useAuth from '../auth/useAuth';
 import Screen from '../components/Screen';
@@ -17,6 +22,12 @@ import numberFormat from '../utility/numberFormat';
 import showOk from '../components/notifications/showOk';
 import askBeforeDelete from '../components/askBeforeDelete';
 import Activityindicator from '../components/Activityindicator';
+
+const adUnitId = __DEV__
+	? TestIds.BANNER
+	: Platform.OS === 'ios'
+	? 'ca-app-pub-4744918320429923/1826413524'
+	: 'ca-app-pub-4744918320429923/9956981140';
 
 function ProfileScreen({ navigation }: { navigation: any }) {
 	const { user, setUser, logOut } = useAuth();
@@ -45,6 +56,11 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 		setError(undefined);
 		setUser(result.data);
 		setSounds(result.data.sounds);
+		if (user?.getMoreDitails) {
+			navigation.navigate(routes.PROFILE_EDIT.name, {
+				...result.data,
+			});
+		}
 	};
 
 	const handleDeleteAccount = async () => {
@@ -115,7 +131,10 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 	}, [navigation, isFocused]);
 
 	return (
-		<Screen style={styles.screen}>
+		<Screen
+			titleColor={colors.white}
+			backgroundColor={colors.light}
+			style={styles.screen}>
 			<Activityindicator visible={loading} />
 			<View style={styles.main}>
 				{user?.firstName && (
@@ -123,18 +142,20 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 						title={`${user?.firstName} ${user?.lastName}`}
 						subTitle={user?.nation?.name}
 						edit
+						bold
+						style={{ width: '60%' }}
+						image={user?.profilePic || 'placeHolder'}
 						IconComponent={
-							user?.nation?.flag ? (
-								<View style={styles.flag}>
+							user?.nation?.flag && (
+								<View
+									style={[
+										styles.flag,
+										defaultStyle.marginStartRtl(-20),
+									]}>
 									<Text style={styles.flagText}>
 										{user?.nation?.flag}
 									</Text>
 								</View>
-							) : (
-								<Icon
-									name='account'
-									backgroundColor={colors.primary}
-								/>
 							)
 						}
 						onPress={() =>
@@ -237,6 +258,13 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 					</View>
 				)}
 			</View>
+			<BannerAd
+				unitId={adUnitId}
+				size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+				requestOptions={{
+					requestNonPersonalizedAdsOnly: true,
+				}}
+			/>
 			<CardItem
 				title='Sign Out'
 				IconComponent={
@@ -258,8 +286,6 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
 	screen: {
 		width: '100%',
-		backgroundColor: defaultStyle.colors.light,
-		paddingTop: 0,
 	},
 	main: {
 		flex: 1,
@@ -273,6 +299,8 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		justifyContent: 'center',
 		alignItems: 'center',
+		alignSelf: 'flex-end',
+		marginBottom: -10,
 	},
 	flagText: {
 		fontSize: Platform.OS === 'android' ? 20 : 24,

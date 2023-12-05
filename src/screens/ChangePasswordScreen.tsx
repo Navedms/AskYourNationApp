@@ -139,7 +139,6 @@ function ChangePasswordScreen() {
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
-		paddingTop: 0,
 	},
 	title: {
 		marginVertical: 30,

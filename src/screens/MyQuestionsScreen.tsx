@@ -99,7 +99,7 @@ function MyQuestionsScreen({ navigation, route }) {
 	};
 
 	return (
-		<Screen style={{ paddingTop: 0 }}>
+		<Screen>
 			<Activityindicator visible={loading} />
 			{data.length === 0 && !loading && (
 				<NoResults

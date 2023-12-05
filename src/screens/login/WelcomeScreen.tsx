@@ -6,21 +6,26 @@ import {
 	Image,
 	ScrollView,
 	TouchableOpacity,
+	Dimensions,
 } from 'react-native';
+import { jwtDecode } from 'jwt-decode';
 import * as Yup from 'yup';
+import * as Google from 'expo-auth-session/providers/google';
+import * as Apple from 'expo-apple-authentication';
+import * as WebBrowser from 'expo-web-browser';
 
 import authApi, { Nation, User } from '../../api/auth';
 import {
 	ErrorMessage,
 	Form,
 	FormField,
-	FormGroupPicker,
 	FormPicker,
 	FormSelectItem,
 	SubmitButton,
 } from '../../components/forms';
 import colors from '../../config/colors';
 import nationsApi from '../../api/nations';
+import questionApi from '../../api/questions';
 import Text from '../../components/Text';
 import useAuth from '../../auth/useAuth';
 import navigation from '../../navigation/rootNavigation';
@@ -32,6 +37,9 @@ import Activityindicator from '../../components/Activityindicator';
 import Modal from '../../components/AppModal';
 import Button from '../../components/Button';
 import defaultStyle from '../../config/style';
+import storageAppleUser from '../../auth/storageAppleUser';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export interface NationSelect {
 	label: string;
@@ -39,16 +47,19 @@ export interface NationSelect {
 	key: number | string;
 }
 
-const signList = [
-	{
-		id: 'SignUp',
-		value: 'Sign Up',
-	},
-	{
-		id: 'SignIn',
-		value: 'Sign In',
-	},
-];
+interface InitialValues {
+	firstName?: string;
+	lastName?: string;
+	nation?: {
+		name?: string;
+		flag?: string;
+	};
+	language?: string;
+	email?: string;
+	password?: string;
+	terms?: boolean;
+	verifiedEmail?: boolean;
+}
 
 function WelcomeScreen({ route }: any) {
 	const auth = useAuth();
@@ -56,12 +67,14 @@ function WelcomeScreen({ route }: any) {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [terms, setTerms] = useState<boolean>(false);
 	const [open, setOpen] = useState<boolean>(false);
-	const [signMode, setSignMode] = useState<string>('SignUp');
+	const [appleBtnAvailable, setAppleBtnAvailable] = useState<boolean>(false);
+	const [signMode, setSignMode] = useState<string>('SignIn');
 	const [nationList, setNationList] = useState<Nation[]>([]);
+	const [languages, setLanguages] = useState<NationSelect[]>([]);
 	const [nationSelectList, setNationSelectList] = useState<NationSelect[]>(
 		[]
 	);
-	const [initialValues, setInitialValues] = useState(
+	const [initialValues, setInitialValues] = useState<InitialValues>(
 		signMode === 'SignUp'
 			? {
 					firstName: undefined,
@@ -70,6 +83,7 @@ function WelcomeScreen({ route }: any) {
 						name: undefined,
 						flag: undefined,
 					},
+					language: undefined,
 					email: undefined,
 					password: undefined,
 					terms: false,
@@ -79,6 +93,12 @@ function WelcomeScreen({ route }: any) {
 					password: undefined,
 			  }
 	);
+	const [request, response, promptAsync] = Google.useAuthRequest({
+		androidClientId:
+			'163827222600-6dps18qkcsqln8anoes7aajk16ssubs9.apps.googleusercontent.com',
+		iosClientId:
+			'163827222600-06eiimp7tg1inrpobnfcv7llscjf7e3t.apps.googleusercontent.com',
+	});
 
 	const validationSchema = Yup.object().shape(
 		signMode === 'SignUp'
@@ -91,7 +111,6 @@ function WelcomeScreen({ route }: any) {
 							'Should contain only alphabets'
 						),
 					lastName: Yup.string()
-						.required()
 						.label('Last Name')
 						.matches(
 							/^[a-zA-Z ]*$/,
@@ -116,13 +135,22 @@ function WelcomeScreen({ route }: any) {
 			  }
 	);
 
-	const handleSubmit = async (values: User) => {
+	const handleSubmit = async (values: InitialValues) => {
 		setLoading(true);
+		if (signMode === 'SignIn' && values.firstName) {
+			values.firstName = undefined;
+		}
 		if (values.nation) {
 			const tempNation = nationList?.find(
 				(item) => item.name === values.nation
 			);
 			values.nation = tempNation;
+		}
+		if (values.language) {
+			values.nation = {
+				...values.nation,
+				language: values.language,
+			} as Nation;
 		}
 		values.email = values.email?.toLowerCase();
 
@@ -152,7 +180,11 @@ function WelcomeScreen({ route }: any) {
 		} else {
 			setError(undefined);
 			setLoading(false);
-			auth.logIn(result.data);
+			auth.logIn(
+				result.data,
+				signMode === 'SignUp',
+				values.verifiedEmail
+			);
 		}
 	};
 
@@ -174,6 +206,39 @@ function WelcomeScreen({ route }: any) {
 		setNationSelectList(tempList);
 	};
 
+	const checkAppleBtnIsAvailable = async () => {
+		const isAvailable = await Apple.isAvailableAsync();
+		setAppleBtnAvailable(isAvailable);
+	};
+
+	const getSupportedLanguages = async () => {
+		if (languages.length > 0) return;
+		const result: ApiResponse<any> | any =
+			await questionApi.getSupportedLanguages();
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			setLoading(false);
+			return setError('Network error: Unable to connect to the server');
+		} else if (result.data?.error) {
+			setLoading(false);
+			return setError(result.data.error);
+		}
+
+		setError(undefined);
+		const tempList = result.data.list.map((item: any) => {
+			return {
+				label: item.name,
+				value: item.code,
+				key: item.code,
+			};
+		});
+
+		setLanguages(tempList);
+	};
+
 	const handleUseTerms = (value: boolean) => {
 		if (value) {
 			setOpen(value);
@@ -183,13 +248,171 @@ function WelcomeScreen({ route }: any) {
 		}
 	};
 	const handleConfirmTerms = () => {
+		if (error === 'You must confirm the terms of use') setError(undefined);
 		setOpen(false);
 		setTerms(true);
 	};
 
+	const handleGoogleSignInUP = () => {
+		if (signMode === 'SignUp' && !terms)
+			return setError('You must confirm the terms of use');
+		setError(undefined);
+		promptAsync();
+	};
+
+	const handleAppleSignInUP = async () => {
+		if (signMode === 'SignUp' && !terms)
+			return setError('You must confirm the terms of use');
+		setLoading(true);
+		try {
+			const appleUser: any = await Apple.signInAsync({
+				requestedScopes: [
+					Apple.AppleAuthenticationScope.FULL_NAME,
+					Apple.AppleAuthenticationScope.EMAIL,
+				],
+			});
+
+			const decoded: any = jwtDecode(appleUser.identityToken);
+			if (appleUser?.fullName?.givenName) {
+				storageAppleUser.storeFullName(
+					JSON.stringify(appleUser.fullName)
+				);
+			}
+			const prevFullNameJson: any = await storageAppleUser.getFullName();
+			const prevFullName = JSON.parse(prevFullNameJson);
+			if (!appleUser.identityToken) {
+				setLoading(false);
+				return setError(
+					'Apple Authorization error: Unable to get details from your Apple account. Your Identity Token is missing'
+				);
+			} else if (!decoded.email) {
+				setLoading(false);
+				return setError(
+					'Apple Authorization error: Unable to get details from your Apple account. Your Email is missing'
+				);
+			} else if (
+				signMode === 'SignUp' &&
+				!appleUser?.fullName?.givenName &&
+				!prevFullName.givenName
+			) {
+				setLoading(false);
+				return setError(
+					'Apple Authorization error: To sign up, you must provide a first name'
+				);
+			} else if (signMode === 'SignUp' && !decoded.email_verified) {
+				setLoading(false);
+				return setError(
+					'Apple Authorization error: To sign up through Apple, you must first verify your email address in your Apple account'
+				);
+			}
+
+			const firstName = appleUser?.fullName?.givenName
+				? appleUser?.fullName?.givenName
+				: prevFullName.givenName;
+			const lastName = appleUser?.fullName?.familyName
+				? appleUser?.fullName?.familyName
+				: prevFullName.familyName;
+
+			const user: InitialValues & User = {
+				email: decoded.email,
+				firstName: firstName,
+				lastName: lastName,
+				profilePic: undefined,
+				verifiedEmail: decoded.email_verified || false,
+				language: 'en',
+			};
+			handleSubmit(user);
+			setError(undefined);
+			setLoading(false);
+		} catch (error: any) {
+			setLoading(false);
+			if (error.code === 'ERR_REQUEST_CANCELED') {
+				return setError(
+					'Authorization error: Unable to connect to your Apple account'
+				);
+			} else {
+				return setError(`Authorization error: ${error}`);
+			}
+		}
+	};
+
+	const handleSwitch = (value: string) => {
+		setSignMode(value);
+		setError(undefined);
+		setTerms(false);
+		setInitialValues(
+			value === 'SignUp'
+				? {
+						firstName: undefined,
+						lastName: undefined,
+						nation: {
+							name: undefined,
+							flag: undefined,
+						},
+						email: undefined,
+						password: undefined,
+						terms: false,
+				  }
+				: {
+						email: undefined,
+						password: undefined,
+				  }
+		);
+	};
+
+	const handleGoogleGetUserDetails = async () => {
+		if (!response) return;
+		setLoading(true);
+		const token = (response as any).authentication.accessToken;
+		if (!token) {
+			setLoading(false);
+			return setError(
+				'Authorization error: Unable to get your Google account token'
+			);
+		}
+		try {
+			const response = await fetch(
+				'https://www.googleapis.com/userinfo/v2/me',
+				{
+					headers: { Authorization: `Bearer ${token}` },
+				}
+			);
+			setLoading(false);
+			setError(undefined);
+			const googleUser = await response.json();
+
+			const user: InitialValues & User = {
+				email: googleUser.email,
+				firstName: googleUser.given_name,
+				lastName: googleUser.family_name || '',
+				profilePic: googleUser?.picture,
+				verifiedEmail: googleUser.verified_email || false,
+				language: googleUser.locale?.split('-')[0],
+			};
+
+			handleSubmit(user);
+		} catch (error) {
+			setLoading(false);
+			return setError(`Authorization error: ${error}`);
+		}
+	};
+
 	useEffect(() => {
+		checkAppleBtnIsAvailable();
+		getSupportedLanguages();
 		getNationList();
 	}, []);
+
+	useEffect(() => {
+		if (response) {
+			if (response.type === 'cancel') {
+				setLoading(false);
+				setError(undefined);
+			} else if (response?.type === 'success') {
+				handleGoogleGetUserDetails();
+			}
+		}
+	}, [response]);
 
 	return (
 		<ImageBackground
@@ -199,44 +422,18 @@ function WelcomeScreen({ route }: any) {
 			<Screen backgroundColor={colors.opacity}>
 				<Activityindicator visible={loading} />
 				<ScrollView contentContainerStyle={styles.form}>
-					<Image
-						source={require('../../../assets/AskYourNationLogo.png')}
-						style={styles.logo}
-					/>
+					{signMode === 'SignUp' ? (
+						<Text style={styles.header}>Create Account</Text>
+					) : (
+						<Image
+							source={require('../../../assets/AskYourNationLogo.png')}
+							style={styles.logo}
+						/>
+					)}
 					<Form
 						initialValues={initialValues}
 						onSubmit={handleSubmit}
 						validationSchema={validationSchema}>
-						<FormGroupPicker
-							firstValue={signMode}
-							key='SignInOrUp'
-							name='SignInOrUp'
-							list={signList}
-							fixedPadding={40}
-							onChange={(name: string, value: string) => {
-								setSignMode(value);
-								setError(undefined);
-								setTerms(false);
-								setInitialValues(
-									value === 'SignUp'
-										? {
-												firstName: undefined,
-												lastName: undefined,
-												nation: {
-													name: undefined,
-													flag: undefined,
-												},
-												email: undefined,
-												password: undefined,
-												terms: false,
-										  }
-										: {
-												email: undefined,
-												password: undefined,
-										  }
-								);
-							}}
-						/>
 						{signMode === 'SignUp' && (
 							<FormField
 								name='firstName'
@@ -265,6 +462,19 @@ function WelcomeScreen({ route }: any) {
 									icon='flag-variant'
 								/>
 							)}
+						{signMode === 'SignUp' && languages.length > 0 && (
+							<FormPicker
+								name='language'
+								list={languages}
+								fixedPadding={40}
+								placeholder={{
+									label: 'Select your language',
+									value: null,
+									color: colors.dark,
+								}}
+								icon='translate'
+							/>
+						)}
 						<FormField
 							autoCorrect={false}
 							autoCapitalize='none'
@@ -303,7 +513,7 @@ function WelcomeScreen({ route }: any) {
 								firstValue={terms}
 							/>
 						)}
-						<View style={styles.separator}></View>
+						<View style={styles.separatorForm}></View>
 						<ErrorMessage error={error} visible={!!error} />
 						<SubmitButton
 							title={
@@ -313,8 +523,89 @@ function WelcomeScreen({ route }: any) {
 								signMode === 'SignUp' ? 'primary' : 'secondary'
 							}
 						/>
+						<View style={styles.separator}>
+							<View style={styles.separatorLine}></View>
+							<Text style={styles.separatorText}>or</Text>
+							<View style={styles.separatorLine}></View>
+						</View>
+						<View
+							style={[
+								styles.signBtns,
+								signMode === 'SignUp' &&
+									appleBtnAvailable &&
+									styles.signUpBtns,
+							]}>
+							{appleBtnAvailable && (
+								<Button
+									title={`Sign ${
+										signMode === 'SignUp' ? 'up' : 'in'
+									} ${
+										signMode === 'SignUp' &&
+										appleBtnAvailable
+											? ''
+											: 'with Apple'
+									}`}
+									onPress={() => handleAppleSignInUP()}
+									style={[
+										styles.apple,
+										signMode === 'SignUp' &&
+											appleBtnAvailable &&
+											styles.signUpApple,
+									]}
+									backgroundColor='white'
+									color='black'
+									icon='apple'
+									image='apple'
+								/>
+							)}
+							<Button
+								title={`Sign ${
+									signMode === 'SignUp' ? 'up' : 'in'
+								} ${
+									signMode === 'SignUp' && appleBtnAvailable
+										? ''
+										: 'with Google'
+								}`}
+								onPress={() => handleGoogleSignInUP()}
+								style={[
+									styles.google,
+									signMode === 'SignUp' &&
+										appleBtnAvailable &&
+										styles.signUpGoogle,
+								]}
+								backgroundColor='white'
+								color='black'
+								icon='google'
+								image='google'
+							/>
+						</View>
 					</Form>
 				</ScrollView>
+				<TouchableOpacity
+					style={[defaultStyle.rtlRow, styles.btnSwitch]}
+					onPress={() =>
+						handleSwitch(
+							signMode === 'SignUp' ? 'SignIn' : 'SignUp'
+						)
+					}>
+					<Text style={{ color: colors.dark }}>
+						{signMode === 'SignUp'
+							? 'Already have an account?'
+							: `Don't have an account?`}
+					</Text>
+					<Text
+						style={[
+							styles.signInOnText,
+							{
+								color:
+									signMode === 'SignUp'
+										? colors.secondary
+										: colors.primary,
+							},
+						]}>
+						{signMode === 'SignUp' ? 'Sign in' : 'Sign up'}
+					</Text>
+				</TouchableOpacity>
 				<Modal
 					visible={open}
 					setVisible={setOpen}
@@ -450,12 +741,12 @@ function WelcomeScreen({ route }: any) {
 							If you have any questions or concerns about these
 							Terms, please contact us at ohadnave@gmail.com
 						</Text>
-						<Button
-							onPress={handleConfirmTerms}
-							style={styles.btn}
-							title='Confirm the terms'
-						/>
 					</ScrollView>
+					<Button
+						onPress={handleConfirmTerms}
+						style={styles.btn}
+						title='Confirm the terms'
+					/>
 				</Modal>
 			</Screen>
 		</ImageBackground>
@@ -465,7 +756,7 @@ function WelcomeScreen({ route }: any) {
 const styles = StyleSheet.create({
 	form: {
 		zIndex: 2,
-		width: '100%',
+		width: Dimensions.get('window').width,
 		paddingHorizontal: 20,
 		justifyContent: 'center',
 		alignItems: 'center',
@@ -490,13 +781,35 @@ const styles = StyleSheet.create({
 	formSwitch: {
 		borderWidth: 1,
 	},
+	separatorForm: {
+		height: 10,
+	},
 	separator: {
-		flex: 1,
-		height: 20,
+		flexDirection: 'row',
+		justifyContent: 'space-around',
+		alignItems: 'center',
+		marginTop: 5,
+		marginBottom: 5,
+	},
+	separatorLine: {
+		borderBottomWidth: 1,
+		borderColor: colors.dark,
+		width: '45%',
+	},
+	separatorText: {
+		width: 40,
+		textAlign: 'center',
+		marginTop: -2,
 	},
 	logo: {
 		width: 230,
 		height: 230,
+		marginBottom: 10,
+	},
+	logoSignUp: {
+		width: 100,
+		height: 100,
+		marginBottom: 10,
 	},
 	container: {
 		flex: 1,
@@ -507,6 +820,13 @@ const styles = StyleSheet.create({
 		paddingVertical: 20,
 		justifyContent: 'flex-start',
 		alignItems: 'center',
+	},
+	header: {
+		fontSize: 28,
+		fontWeight: 'bold',
+		color: colors.primary,
+		marginTop: 5,
+		marginBottom: 5,
 	},
 	title: {
 		fontSize: 20,
@@ -528,6 +848,39 @@ const styles = StyleSheet.create({
 	},
 	btn: {
 		marginTop: 30,
+	},
+	apple: {
+		borderWidth: 1,
+		borderColor: colors.dark,
+	},
+	google: {
+		borderWidth: 1,
+		borderColor: colors.dark,
+	},
+	signBtns: {
+		width: '100%',
+	},
+	signUpBtns: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+	},
+	signUpApple: {
+		width: '49%',
+		justifyContent: 'flex-end',
+	},
+	signUpGoogle: {
+		width: '49%',
+		justifyContent: 'flex-end',
+	},
+	btnSwitch: {
+		justifyContent: 'center',
+		alignItems: 'center',
+		marginBottom: 50,
+	},
+	signInOnText: {
+		paddingHorizontal: 5,
+		fontWeight: 'bold',
 	},
 });
 

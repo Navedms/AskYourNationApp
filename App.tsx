@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import FlashMessage from 'react-native-flash-message';
 import * as SplashScreen from 'expo-splash-screen';
+import { AppOpenAd, AdEventType } from 'react-native-google-mobile-ads';
 
 import { navigationRef } from './src/navigation/rootNavigation';
 import navigationTheme from './src/navigation/navigationTheme';
@@ -10,17 +12,39 @@ import AuthContext from './src/auth/context';
 import RootNavigator, { User } from './src/navigation/RootNavigator';
 import { fetchPackageJsonContentVersion, gotoStore } from './src/api/updateApp';
 import Modal from './src/components/AppModal';
-import { Platform, StyleSheet, View } from 'react-native';
 import Text from './src/components/Text';
 import Button from './src/components/Button';
 import settings from './package.json';
 import colors from './src/config/colors';
+import { decode } from 'base-64';
+global.atob = decode;
+
+const adUnitId =
+	Platform.OS === 'ios'
+		? 'ca-app-pub-4744918320429923/4821050050'
+		: 'ca-app-pub-4744918320429923/2790468848';
+
+const appOpenAd = AppOpenAd.createForAdRequest(adUnitId, {
+	requestNonPersonalizedAdsOnly: true,
+	keywords: ['games', 'culture', 'travel', 'education', 'learning', 'food'],
+});
 
 export default function App() {
 	const [user, setUser] = useState<User>();
 	const [isReady, setIsReady] = useState<boolean>(false);
 	const [openVersion, setOpenVersion] = useState<boolean>(false);
 	const [isNewVersion, setIsNewVersion] = useState<string | null>(null);
+
+	useEffect(() => {
+		const unsubscribe = appOpenAd.addAdEventListener(
+			AdEventType.LOADED,
+			() => {
+				appOpenAd.show();
+			}
+		);
+		appOpenAd.load();
+		return unsubscribe;
+	}, []);
 
 	const restoreUser = async () => {
 		const user = await authStorage.getUser();
@@ -64,6 +88,11 @@ export default function App() {
 	return (
 		<AuthContext.Provider value={{ user, setUser }}>
 			<NavigationContainer ref={navigationRef} theme={navigationTheme}>
+				<StatusBar
+					translucent={true}
+					backgroundColor={colors.opacity}
+					barStyle={'dark-content'}
+				/>
 				<RootNavigator user={user} />
 				<FlashMessage position='bottom' />
 				<Modal

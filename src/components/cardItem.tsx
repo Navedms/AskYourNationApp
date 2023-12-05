@@ -1,5 +1,11 @@
 import React, { useState, memo } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import {
+	View,
+	StyleSheet,
+	TouchableOpacity,
+	Platform,
+	Image,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
@@ -8,11 +14,14 @@ import colors from '../config/colors';
 import defaultStyle from '../config/style';
 import { AmountOfanswers, Rating } from '../api/questions';
 import numberFormat from '../utility/numberFormat';
+import Icon from './Icon';
 
 interface CardItemProps {
 	itemKey?: string;
 	title: string;
 	subTitle?: string;
+	image?: string;
+	sizeImg?: number;
 	IconComponent?: any;
 	SwitchComponent?: any;
 	onPress?: () => void;
@@ -29,6 +38,8 @@ function CardItem({
 	itemKey,
 	title,
 	subTitle,
+	image,
+	sizeImg = 70,
 	IconComponent,
 	SwitchComponent,
 	onPress,
@@ -73,12 +84,33 @@ function CardItem({
 					<View style={[defaultStyle.rtlRow, styles.container]}>
 						<View
 							style={[defaultStyle.rtlRow, styles.containerBody]}>
+							{image && image !== 'placeHolder' && (
+								<Image
+									style={[
+										styles.image,
+										{ width: sizeImg, height: sizeImg },
+									]}
+									source={{
+										uri: image,
+									}}
+								/>
+							)}
+							{image === 'placeHolder' && (
+								<Icon
+									name='camera-plus'
+									backgroundColor={colors.medium}
+									size={sizeImg}
+									style={styles.image}
+								/>
+							)}
 							{IconComponent}
 							<View
 								style={[
 									styles.detailsContainer,
 									defaultStyle.alignItemsRtl,
-									SwitchComponent && { width: '65%' },
+									(SwitchComponent || image) && {
+										width: '65%',
+									},
 								]}>
 								<Text
 									style={[
@@ -202,6 +234,11 @@ const styles = StyleSheet.create({
 	subTitle: {
 		color: colors.dark,
 		textAlign: 'left',
+	},
+	image: {
+		borderRadius: 35,
+		borderWidth: 1,
+		borderColor: colors.darkMedium,
 	},
 	switch: {
 		alignSelf: 'center',

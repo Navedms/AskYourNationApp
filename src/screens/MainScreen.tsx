@@ -1,17 +1,24 @@
-import { AppState, StyleSheet, Text, View } from 'react-native';
+import {
+	AppState,
+	Platform,
+	StyleSheet,
+	Text,
+	View,
+	StatusBar,
+} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import useAuth from '../auth/useAuth';
 import { ApiResponse } from 'apisauce';
 import { useIsFocused } from '@react-navigation/native';
 
 import authApi from '../api/auth';
-import questionApi, { Question, ShowAnswers } from '../api/questions';
+import questionApi, { Answers, Question, ShowAnswers } from '../api/questions';
 import Screen from '../components/Screen';
 import NoResults from '../components/NoResults';
 import routes from '../navigation/routes';
 import Header from '../components/Header';
 import colors from '../config/colors';
-import QuestionComponent from '../components/Question';
+import QuestionComponent, { TranslateQuestion } from '../components/Question';
 import Button from '../components/Button';
 import Activityindicator from '../components/Activityindicator';
 import RatingComponent from '../components/Rating';
@@ -20,13 +27,13 @@ import AppModal from '../components/AppModal';
 import showOk from '../components/notifications/showOk';
 import showError from '../components/notifications/showError';
 import ReportComponent from '../components/Report';
+import * as Speech from 'expo-speech';
 
 export default function MainScreen({ navigation }: any) {
 	// STATEs
 	const { user, setUser, logOut } = useAuth();
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [networkError, setNetworkError] = useState<boolean>(false);
-	const [rateMsg, setRateMsg] = useState<string | undefined>(undefined);
 	const [answerMsg, setAnswerMsg] = useState<string | undefined>(undefined);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [data, setData] = useState<Question[]>([]);
@@ -38,7 +45,12 @@ export default function MainScreen({ navigation }: any) {
 	const [open, setOpen] = useState<boolean>(false);
 	const [report, setReport] = useState<boolean>(false);
 	const [disabled, setDisabled] = useState<boolean>(false);
-	const [rateDisabled, setRateDisabled] = useState<boolean>(false);
+	const [skipDisabled, setSkipDisabled] = useState<boolean>(false);
+	const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+	const [isTranslate, setIsTranslate] = useState<boolean>(false);
+	const [translate, setTranslate] = useState<TranslateQuestion>();
+	const [userRate, setUserRate] = useState<number>(0);
+
 	const isFocused = useIsFocused();
 
 	// APIs
@@ -59,7 +71,10 @@ export default function MainScreen({ navigation }: any) {
 		}
 		setError(undefined);
 		setNetworkError(false);
-		setUser(result.data);
+		setUser({ ...result.data, getMoreDitails: user?.getMoreDitails });
+		if (user?.getMoreDitails) {
+			navigation.navigate(routes.PROFILE.name);
+		}
 	};
 
 	const getData = async () => {
@@ -82,6 +97,11 @@ export default function MainScreen({ navigation }: any) {
 
 		setError(undefined);
 		setNetworkError(false);
+		if (result.data.list?.length === 1) {
+			setSkipDisabled(true);
+		} else {
+			setSkipDisabled(false);
+		}
 		setData(result.data.list);
 		setLoading(false);
 	};
@@ -132,9 +152,8 @@ export default function MainScreen({ navigation }: any) {
 		} else if (result.data.error) {
 			return setError(result.data.error);
 		}
+		setUserRate(0);
 		setError(undefined);
-		setAnswerMsg(undefined);
-		setRateMsg(result.data.msg);
 	};
 
 	const reportQuestion = async (
@@ -167,17 +186,42 @@ export default function MainScreen({ navigation }: any) {
 		showOk(result.data.msg, user?.sounds);
 	};
 
+	const translateQuestion = async (text: string) => {
+		const result: ApiResponse<any> = await questionApi.translate({ text });
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			return showError(
+				'Network error: Unable to connect to the server',
+				user?.sounds
+			);
+		} else if (result.status === 401 || result.status === 403) {
+			return logOut();
+		} else if (result.data.error) {
+			return showError(result.data.error, user?.sounds);
+		}
+		setTranslate({
+			question: result.data.translate.split('|')[0],
+			answers: {
+				options: [
+					result.data.translate.split('|')[1],
+					result.data.translate.split('|')[2],
+					result.data.translate.split('|')[3],
+					result.data.translate.split('|')[4],
+				],
+			},
+		});
+	};
+
 	// handle functions
 
 	const handleSubmitAnswer = (id: string, index: number) => {
+		isSpeaking && Speech.stop();
 		setUserAnswer(index);
 		setDisabled(true);
 		postAnswer(id, index);
-	};
-
-	const handleSubmitRating = (id: string, rating: number) => {
-		setRateDisabled(true);
-		postRate(id, rating);
 	};
 
 	const handleSubmitReport = (
@@ -194,19 +238,53 @@ export default function MainScreen({ navigation }: any) {
 		const newData = data.filter(
 			(item) => item._id !== data[rendomIndex - 1]?._id
 		);
+		isSpeaking && Speech.stop();
 		if (report) {
 			setData([]);
 		} else {
 			setData(newData);
+		}
+		if (data[rendomIndex - 1]?._id && userRate) {
+			postRate(data[rendomIndex - 1]._id as string, userRate);
 		}
 		setRendomIndex(Math.floor(Math.random() * data.length) + 1);
 		setDisabled(false);
 		setUserAnswer(undefined);
 		setShowAnswers(undefined);
 		setAnswerMsg(undefined);
-		setRateMsg(undefined);
-		setRateDisabled(false);
 		setReport(false);
+		setTranslate(undefined);
+		setIsTranslate(false);
+	};
+
+	const handleTextToSpeech = (question: string, answers: Answers) => {
+		if (loading) return;
+		if (isSpeaking) {
+			Speech.stop();
+		} else {
+			setLoading(true);
+			const msg = `${question}. A. ${answers.options[0]}. B. ${answers.options[1]}. C. ${answers.options[2]}. or D. ${answers.options[3]}.`;
+			Speech.speak(msg, {
+				rate: 1.0,
+				voice:
+					Platform.OS === 'android'
+						? 'en-us-x-tpf-local'
+						: 'com.apple.ttsbundle.Samantha-compact',
+				onStart: () => {
+					setIsSpeaking(true);
+					setLoading(false);
+				},
+				onDone: () => setIsSpeaking(false),
+				onStopped: () => setIsSpeaking(false),
+			});
+		}
+	};
+	const handleTranslate = (question: string, answers: Answers) => {
+		setIsTranslate(!isTranslate);
+		if (!isTranslate && !translate) {
+			const text = `${question}|${answers.options[0]}|${answers.options[1]}|${answers.options[2]}|${answers.options[3]}`;
+			translateQuestion(text);
+		}
 	};
 
 	// react hooks
@@ -224,10 +302,17 @@ export default function MainScreen({ navigation }: any) {
 	}, [data]);
 
 	useEffect(() => {
+		if (isFocused) {
+			StatusBar.setBarStyle('light-content');
+		} else {
+			StatusBar.setBarStyle('dark-content');
+		}
+		isSpeaking && Speech.stop();
 		const subscription = AppState.addEventListener(
 			'change',
 			(nextAppState) => {
 				if (nextAppState === 'active') {
+					setReport(true);
 					handleSkipOrNext();
 				}
 			}
@@ -268,11 +353,18 @@ export default function MainScreen({ navigation }: any) {
 								<QuestionComponent
 									data={data[rendomIndex - 1]}
 									handleSubmitAnswer={handleSubmitAnswer}
+									handleTextToSpeech={handleTextToSpeech}
 									disabled={disabled}
+									isSpeaking={isSpeaking}
+									translate={translate}
+									isTranslate={isTranslate}
+									handleTranslate={handleTranslate}
 									userAnswer={userAnswer}
 									showAnswers={showAnswers}
 									setOpen={setOpen}
 									isReport={report}
+									user={user}
+									loading={loading}
 								/>
 							)}
 							{answerMsg && (
@@ -282,10 +374,8 @@ export default function MainScreen({ navigation }: any) {
 							)}
 							{disabled && (
 								<RatingComponent
-									id={data[rendomIndex - 1]._id}
-									handleSubmitRating={handleSubmitRating}
-									disabled={rateDisabled}
-									rateMsg={rateMsg}
+									userRate={userRate}
+									setUserRate={setUserRate}
 								/>
 							)}
 							{error && <Text style={styles.error}>{error}</Text>}
@@ -301,30 +391,35 @@ export default function MainScreen({ navigation }: any) {
 								}
 								style={styles.btnContainer}
 								onPress={handleSkipOrNext}
+								disabled={skipDisabled && !disabled}
 							/>
 						</View>
 					) : (
-						<NoResults
-							title={
-								networkError ? error : 'No more questions...'
-							}
-							text={
-								networkError
-									? 'Please try again later...'
-									: 'Looks like you have answered all the questions for now...'
-							}
-							iconName={
-								networkError ? 'wifi-off' : 'comment-check'
-							}
-							button={
-								networkError ? undefined : (
-									<Button
-										title='Check for more'
-										onPress={() => getData()}
-									/>
-								)
-							}
-						/>
+						!loading && (
+							<NoResults
+								title={
+									networkError
+										? error
+										: 'No more questions...'
+								}
+								text={
+									networkError
+										? 'Please try again later...'
+										: 'Looks like you have answered all the questions for now...'
+								}
+								iconName={
+									networkError ? 'wifi-off' : 'comment-check'
+								}
+								button={
+									networkError ? undefined : (
+										<Button
+											title='Check for more'
+											onPress={() => getData()}
+										/>
+									)
+								}
+							/>
+						)
 					)}
 				</View>
 			)}

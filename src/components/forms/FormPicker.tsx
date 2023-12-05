@@ -88,7 +88,11 @@ function AppFormPicker({
 		onClose && onClose(values[name]);
 		setFieldTouched(name);
 	};
-	const label = !!placeholder.label && !!values[name];
+
+	const label =
+		!!placeholder.label &&
+		!!values[name] &&
+		typeof values[name] === 'string';
 
 	return (
 		<>

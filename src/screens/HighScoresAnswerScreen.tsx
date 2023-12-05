@@ -1,6 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, FlatList, View, TouchableOpacity } from 'react-native';
+import {
+	StyleSheet,
+	FlatList,
+	View,
+	TouchableOpacity,
+	Platform,
+} from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
+import {
+	BannerAd,
+	BannerAdSize,
+	TestIds,
+} from 'react-native-google-mobile-ads';
 
 import NoResults from '../components/NoResults';
 import Screen from '../components/Screen';
@@ -25,6 +36,12 @@ interface HighScoresScreenProps {
 	navigation: any;
 	sortBy: SortBy;
 }
+
+const adUnitId = __DEV__
+	? TestIds.BANNER
+	: Platform.OS === 'ios'
+	? 'ca-app-pub-4744918320429923/2647455468'
+	: 'ca-app-pub-4744918320429923/5911913056';
 
 function HighScoresAnswersScreen({ navigation }: HighScoresScreenProps) {
 	// state
@@ -114,6 +131,13 @@ function HighScoresAnswersScreen({ navigation }: HighScoresScreenProps) {
 				/>
 			) : (
 				<View style={styles.container}>
+					<BannerAd
+						unitId={adUnitId}
+						size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+						requestOptions={{
+							requestNonPersonalizedAdsOnly: true,
+						}}
+					/>
 					<View style={[styles.btnsContainer, defaultStyle.rtlRow]}>
 						<Text>Show top: </Text>
 						{limitList.map((item: number) => (
@@ -143,6 +167,7 @@ function HighScoresAnswersScreen({ navigation }: HighScoresScreenProps) {
 									id={item.id}
 									title={`${item.firstName} ${item.lastName}`}
 									score={item.points?.[filters.sortBy]}
+									profilePic={item.profilePic}
 									rank={index + 1}
 									nation={item.nation}
 									user={user}
@@ -156,6 +181,7 @@ function HighScoresAnswersScreen({ navigation }: HighScoresScreenProps) {
 								id={user.id}
 								title={`${user.firstName} ${user.lastName}`}
 								score={user.points?.[filters.sortBy]}
+								profilePic={user.profilePic}
 								rank={user.rank || 0}
 								nation={user.nation}
 								user={user}

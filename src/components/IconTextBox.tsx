@@ -3,6 +3,7 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Text from './Text';
+import defaultStyle from '../config/style';
 import colors from '../config/colors';
 
 interface IconTextBoxProps {
@@ -28,6 +29,7 @@ function IconTextBox({
 	return (
 		<View
 			style={[
+				defaultStyle.rtlRow,
 				styles.iconTextContainer,
 				{ backgroundColor },
 				styleContainer,
@@ -37,7 +39,9 @@ function IconTextBox({
 				color={iconColor}
 				size={iconSize}
 			/>
-			<Text style={[styles.text, style]} {...otherProps}>
+			<Text
+				style={[defaultStyle.textAlignJustifyRTL, styles.text, style]}
+				{...otherProps}>
 				{text}
 			</Text>
 		</View>
@@ -47,7 +51,6 @@ function IconTextBox({
 const styles = StyleSheet.create({
 	iconTextContainer: {
 		backgroundColor: colors.light,
-		flexDirection: 'row',
 		justifyContent: 'flex-start',
 		padding: 10,
 		borderRadius: 8,
@@ -57,7 +60,6 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 12,
 		fontSize: 14,
 		color: colors.dark,
-		textAlign: Platform.OS === 'android' ? 'justify' : 'left',
 	},
 });
 

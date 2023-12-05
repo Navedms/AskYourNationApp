@@ -5,6 +5,13 @@ const endpoint = '/users';
 export interface Nation {
 	name?: string;
 	flag?: string;
+	language?: string;
+}
+
+export interface Translate {
+	original?: string;
+	translation?: string;
+	note?: string;
 }
 
 export type SortBy = 'total' | 'questions' | 'answers';
@@ -16,21 +23,25 @@ export interface Points {
 }
 
 export interface User {
-	id: string;
+	id?: string;
 	email?: string;
 	iat?: number;
 	firstName?: string;
 	lastName?: string;
+	profilePic?: string | string[];
+	verifiedEmail?: boolean;
 	password?: string;
 	terms?: boolean;
 	nation?: Nation;
+	translate?: Translate;
 	active?: boolean;
 	points?: Points;
 	postQuestions?: string[];
 	answeredQuestions?: string[];
 	rank?: number;
 	token?: string;
-	sounds: boolean;
+	sounds?: boolean;
+	getMoreDitails?: boolean;
 }
 
 export interface ForgotPassword {
@@ -45,20 +56,9 @@ export interface Filters {
 	limit: number;
 }
 
-const loginRegister = ({
-	email,
-	password,
-	firstName,
-	lastName,
-	nation,
-}: User) =>
-	client.post(endpoint, {
-		email,
-		password,
-		firstName,
-		lastName,
-		nation,
-	});
+const test = (test?: Object) => client.post(`${endpoint}/test`, test);
+
+const loginRegister = (user: User) => client.post(endpoint, user);
 
 const resetPassword = (email?: string) =>
 	client.patch(`${endpoint}/reset-password`, {
@@ -79,13 +79,36 @@ const changePasswordAfterReset = ({ id, newPassword }: ForgotPassword) =>
 
 // update user
 
-const update = ({ id, firstName, lastName, nation }: User) =>
-	client.patch(`${endpoint}/update`, {
-		id,
-		firstName,
-		lastName,
-		nation,
+const update = (
+	{ id, firstName, lastName, nation, profilePic }: User,
+	picChange: boolean
+) => {
+	const data = new FormData();
+
+	data.append('id', id);
+	firstName && data.append('firstName', firstName);
+	lastName && data.append('lastName', lastName);
+	data.append('nationName', nation?.name ? nation?.name : '');
+	data.append('nationFlag', nation?.flag ? nation.flag : '');
+	data.append('nationLanguage', nation?.language ? nation.language : '');
+	if (picChange) {
+		if (profilePic?.length === 0) {
+			data.append('deletProfilePic', 'yes');
+		} else {
+			profilePic.forEach((image, index) => {
+				data.append('file', {
+					name: `profilePic-${index}-${id}`,
+					type: 'image/jpg',
+					uri: image,
+				});
+			});
+		}
+	}
+
+	return client.patch(`${endpoint}/update/v2`, data, {
+		headers: { 'content-type': 'multipart/form-data' },
 	});
+};
 
 // get user profile
 const getUser = (sortBy: SortBy) => client.get(`${endpoint}?sortBy=${sortBy}`);
@@ -119,4 +142,5 @@ export default {
 	getTop,
 	setSounds,
 	deleteAccount,
+	test,
 };

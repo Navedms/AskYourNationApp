@@ -2,30 +2,50 @@ import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { Question, ShowAnswers } from '../api/questions';
+import { Answers, Question, ShowAnswers } from '../api/questions';
 import Text from './Text';
 import colors from '../config/colors';
 import defaultStyle from '../config/style';
 import numberFormat from '../utility/numberFormat';
+import { User } from '../api/auth';
+
+export interface TranslateQuestion {
+	question: string;
+	answers: Answers;
+}
 
 interface QuestionComponentProps {
 	data: Question;
 	handleSubmitAnswer: (id: string, index: number) => void;
+	handleTextToSpeech: (question: string, answers: Answers) => void;
 	disabled: boolean;
+	isSpeaking: boolean;
+	translate?: TranslateQuestion;
+	isTranslate: boolean;
+	handleTranslate: (question: string, answers: Answers) => void;
 	userAnswer?: number;
 	showAnswers?: ShowAnswers;
 	setOpen: (value: boolean) => void;
 	isReport?: boolean;
+	user: User | null;
+	loading: boolean;
 }
 
 const QuestionComponent = ({
 	data,
 	handleSubmitAnswer,
+	handleTextToSpeech,
+	isSpeaking,
+	translate,
+	isTranslate,
+	handleTranslate,
 	disabled = false,
 	userAnswer,
 	showAnswers,
 	setOpen,
 	isReport,
+	user,
+	loading,
 }: QuestionComponentProps) => {
 	return (
 		<>
@@ -47,8 +67,30 @@ const QuestionComponent = ({
 								styles.questionText,
 								defaultStyle.textAlignRTL,
 							]}>
-							{data.question}
+							{isTranslate && translate
+								? translate.question
+								: data.question}
 						</Text>
+						<TouchableOpacity
+							onPress={() =>
+								handleTextToSpeech(data.question, data.answers)
+							}
+							disabled={loading || isTranslate}
+							style={defaultStyle.alignSelfEndRtl}>
+							<MaterialCommunityIcons
+								name={
+									isSpeaking ? 'volume-source' : 'volume-high'
+								}
+								color={
+									isSpeaking
+										? colors.secondary
+										: loading || isTranslate
+										? colors.darkMedium
+										: colors.dark
+								}
+								size={24}
+							/>
+						</TouchableOpacity>
 					</View>
 					<View style={[styles.dataContainer, defaultStyle.rtlRow]}>
 						{data?.amountOfanswers?.all > 0 &&
@@ -97,34 +139,73 @@ const QuestionComponent = ({
 							</View>
 						)}
 					</View>
-
-					<TouchableOpacity
-						onPress={() => setOpen(true)}
-						disabled={isReport}
+					<View
 						style={[
-							styles.reportContainer,
-							defaultStyle.alignSelfStartRtl,
-							isReport && { opacity: 0.5 },
+							defaultStyle.rtlRow,
+							styles.reportTranslateContainer,
 						]}>
-						<View
+						<TouchableOpacity
+							onPress={() => setOpen(true)}
+							disabled={isReport}
 							style={[
-								styles.ratingContainer,
-								defaultStyle.rtlRow,
+								styles.reportContainer,
+								defaultStyle.alignSelfStartRtl,
+								isReport && { opacity: 0.5 },
 							]}>
-							<MaterialCommunityIcons
-								name='flag-variant'
-								color={colors.dark}
-								size={16}
-							/>
-							<Text style={styles.reportText}>
-								Report question
-							</Text>
-						</View>
-					</TouchableOpacity>
+							<View
+								style={[
+									styles.ratingContainer,
+									defaultStyle.rtlRow,
+								]}>
+								<MaterialCommunityIcons
+									name='flag-variant'
+									color={colors.dark}
+									size={16}
+								/>
+								<Text style={styles.reportText}>
+									Report question
+								</Text>
+							</View>
+						</TouchableOpacity>
+						{user?.nation?.language &&
+							user?.nation?.language !== 'en' && (
+								<TouchableOpacity
+									onPress={() =>
+										handleTranslate(
+											data.question,
+											data.answers
+										)
+									}
+									disabled={isSpeaking}
+									style={[styles.reportContainer]}>
+									<Text
+										style={[
+											styles.translateText,
+											{
+												color: isSpeaking
+													? colors.darkMedium
+													: isTranslate
+													? colors.dark
+													: colors.black,
+											},
+										]}>
+										{isTranslate
+											? user?.translate?.original ||
+											  'Original text'
+											: user?.translate?.translation ||
+											  'Translation'}
+									</Text>
+								</TouchableOpacity>
+							)}
+					</View>
 				</View>
 			)}
 			<FlatList
-				data={data?.answers?.options}
+				data={
+					isTranslate && translate
+						? translate?.answers?.options
+						: data?.answers?.options
+				}
 				keyExtractor={(item, index) =>
 					`an-${item}-${index}-${data?.createdBy?.id}-${data?._id}`
 				}
@@ -223,6 +304,11 @@ const styles = StyleSheet.create({
 		alignItems: 'flex-start',
 		justifyContent: 'flex-start',
 	},
+	reportTranslateContainer: {
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		width: '100%',
+	},
 	reportContainer: {
 		marginTop: 18,
 		marginStart: -10,
@@ -233,6 +319,9 @@ const styles = StyleSheet.create({
 	},
 	reportText: {
 		paddingStart: 3,
+		fontSize: 12,
+	},
+	translateText: {
 		fontSize: 12,
 	},
 });

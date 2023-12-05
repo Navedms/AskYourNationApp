@@ -41,7 +41,6 @@ const SoundClick = async () => {
 	);
 	await sound.playAsync();
 };
-
 export default {
 	SoundError,
 	SoundNotification,

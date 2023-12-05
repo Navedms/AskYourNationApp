@@ -38,6 +38,7 @@ interface AppFormListMakerProps {
 	maxLength?: number;
 	onChange?: (name: string, value: Item[] | null) => void;
 	onPress?: (name: string, value: number) => void;
+	allowAnyText?: boolean;
 	style?: Object;
 }
 
@@ -58,6 +59,7 @@ function AppFormListMaker({
 	maxLength,
 	onChange,
 	onPress,
+	allowAnyText,
 	style,
 }: AppFormListMakerProps) {
 	const { setFieldValue, errors, touched } = useFormikContext();
@@ -83,10 +85,12 @@ function AppFormListMaker({
 	};
 
 	const handleOnChangeText = (id: string, text: string) => {
-		text = text.replace(
-			/[^0-9a-zA-Z .,;:)(!?@#$%^&~<>{}*+-_=/)""'']/gi,
-			''
-		);
+		if (!allowAnyText) {
+			text = text.replace(
+				/[^0-9a-zA-Z .,;:)(!?@#$%^&~<>{}*+-_=/)""'']/gi,
+				''
+			);
+		}
 		const index = value.findIndex((obj) => obj.id == id);
 		const newValueList = value;
 		newValueList[index].value = text;

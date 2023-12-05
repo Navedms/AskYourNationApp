@@ -7,100 +7,66 @@ import defaultStyle from '../config/style';
 import Text from './Text';
 
 interface RatingComponentProps {
-	id: string;
-	handleSubmitRating: (id: string, index: number) => void;
-	disabled: boolean;
-	rateMsg?: string;
+	userRate: number;
+	setUserRate: (userRate: number) => void;
 }
 
-const RatingComponent = ({
-	id,
-	handleSubmitRating,
-	disabled = false,
-	rateMsg,
-}: RatingComponentProps) => {
-	const [userRate, setUserRate] = useState<number | undefined>(undefined);
-
+const RatingComponent = ({ userRate, setUserRate }: RatingComponentProps) => {
 	return (
 		<>
-			{rateMsg ? (
-				<Text style={styles.rateMsg}>{rateMsg}</Text>
-			) : (
-				<Text style={styles.title}>Rate the question:</Text>
-			)}
-			{!rateMsg && (
-				<View style={[styles.container, defaultStyle.rtlRow]}>
-					<TouchableOpacity
-						activeOpacity={1}
-						disabled={disabled}
-						onPress={() => setUserRate(1)}
-						style={[styles.star, disabled && { opacity: 0.5 }]}>
-						<AntDesign
-							name={userRate ? 'star' : 'staro'}
-							color={colors.orange}
-							size={24}
-						/>
-					</TouchableOpacity>
-					<TouchableOpacity
-						activeOpacity={1}
-						disabled={disabled}
-						onPress={() => setUserRate(2)}
-						style={[styles.star, disabled && { opacity: 0.5 }]}>
-						<AntDesign
-							name={userRate && userRate > 1 ? 'star' : 'staro'}
-							color={colors.orange}
-							size={24}
-						/>
-					</TouchableOpacity>
-					<TouchableOpacity
-						activeOpacity={1}
-						disabled={disabled}
-						onPress={() => setUserRate(3)}
-						style={[styles.star, disabled && { opacity: 0.5 }]}>
-						<AntDesign
-							name={userRate && userRate > 2 ? 'star' : 'staro'}
-							color={colors.orange}
-							size={24}
-						/>
-					</TouchableOpacity>
-					<TouchableOpacity
-						activeOpacity={1}
-						disabled={disabled}
-						onPress={() => setUserRate(4)}
-						style={[styles.star, disabled && { opacity: 0.5 }]}>
-						<AntDesign
-							name={userRate && userRate > 3 ? 'star' : 'staro'}
-							color={colors.orange}
-							size={24}
-						/>
-					</TouchableOpacity>
-					<TouchableOpacity
-						activeOpacity={1}
-						disabled={disabled}
-						onPress={() => setUserRate(5)}
-						style={[styles.star, disabled && { opacity: 0.5 }]}>
-						<AntDesign
-							name={userRate && userRate > 4 ? 'star' : 'staro'}
-							color={colors.orange}
-							size={24}
-						/>
-					</TouchableOpacity>
-
-					<TouchableOpacity
-						disabled={!userRate || disabled}
-						onPress={() =>
-							userRate
-								? handleSubmitRating(id, userRate)
-								: undefined
-						}
-						style={[
-							styles.submit,
-							(disabled || !userRate) && { opacity: 0.5 },
-						]}>
-						<Text style={styles.submitText}>Rate</Text>
-					</TouchableOpacity>
-				</View>
-			)}
+			<Text style={styles.title}>Rate the question:</Text>
+			<View style={[styles.container, defaultStyle.rtlRow]}>
+				<TouchableOpacity
+					activeOpacity={1}
+					onPress={() => setUserRate(1)}
+					style={styles.star}>
+					<AntDesign
+						name={userRate ? 'star' : 'staro'}
+						color={colors.orange}
+						size={24}
+					/>
+				</TouchableOpacity>
+				<TouchableOpacity
+					activeOpacity={1}
+					onPress={() => setUserRate(2)}
+					style={styles.star}>
+					<AntDesign
+						name={userRate && userRate > 1 ? 'star' : 'staro'}
+						color={colors.orange}
+						size={24}
+					/>
+				</TouchableOpacity>
+				<TouchableOpacity
+					activeOpacity={1}
+					onPress={() => setUserRate(3)}
+					style={styles.star}>
+					<AntDesign
+						name={userRate && userRate > 2 ? 'star' : 'staro'}
+						color={colors.orange}
+						size={24}
+					/>
+				</TouchableOpacity>
+				<TouchableOpacity
+					activeOpacity={1}
+					onPress={() => setUserRate(4)}
+					style={styles.star}>
+					<AntDesign
+						name={userRate && userRate > 3 ? 'star' : 'staro'}
+						color={colors.orange}
+						size={24}
+					/>
+				</TouchableOpacity>
+				<TouchableOpacity
+					activeOpacity={1}
+					onPress={() => setUserRate(5)}
+					style={styles.star}>
+					<AntDesign
+						name={userRate && userRate > 4 ? 'star' : 'staro'}
+						color={colors.orange}
+						size={24}
+					/>
+				</TouchableOpacity>
+			</View>
 		</>
 	);
 };

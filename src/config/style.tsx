@@ -30,6 +30,12 @@ export default {
 				? 'flex-end'
 				: 'flex-start',
 	},
+	alignSelfEndRtl: {
+		alignSelf:
+			Platform.OS === 'android' && textDirection === 'rtl'
+				? 'flex-start'
+				: 'flex-end',
+	},
 	alignItemsRtl: {
 		alignItems:
 			Platform.OS === 'android' && textDirection === 'rtl'
@@ -91,5 +97,50 @@ export default {
 					? left
 					: right,
 		};
+	},
+	borderTopStartRadiusRTL: (number: number) => {
+		return Platform.OS === 'android' && textDirection === 'rtl'
+			? {
+					borderTopEndRadius: number,
+			  }
+			: {
+					borderTopStartRadius: number,
+			  };
+	},
+	borderBottomStartRadiusRTL: (number: number) => {
+		return Platform.OS === 'android' && textDirection === 'rtl'
+			? {
+					borderBottomEndRadius: number,
+			  }
+			: {
+					borderBottomStartRadius: number,
+			  };
+	},
+	borderTopEndRadiusRTL: (number: number) => {
+		return Platform.OS === 'android' && textDirection !== 'rtl'
+			? {
+					borderTopStartRadius: number,
+			  }
+			: {
+					borderTopEndRadius: number,
+			  };
+	},
+	borderBottomEndRadiusRTL: (number: number) => {
+		return Platform.OS === 'android' && textDirection !== 'rtl'
+			? {
+					borderBottomStartRadius: number,
+			  }
+			: {
+					borderBottomEndRadius: number,
+			  };
+	},
+	borderEndWidthRTL: (number: number) => {
+		return Platform.OS === 'android' && textDirection === 'rtl'
+			? {
+					borderStartWidth: number,
+			  }
+			: {
+					borderEndWidth: number,
+			  };
 	},
 };

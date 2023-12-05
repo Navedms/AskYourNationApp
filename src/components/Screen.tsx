@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Constants from 'expo-constants';
 import { StyleSheet, View, TouchableWithoutFeedback } from 'react-native';
 import colors from '../config/colors';
