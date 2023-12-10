@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 	ImageBackground,
 	StyleSheet,
@@ -38,6 +38,7 @@ import Modal from '../../components/AppModal';
 import Button from '../../components/Button';
 import defaultStyle from '../../config/style';
 import storageAppleUser from '../../auth/storageAppleUser';
+import showError from '../../components/notifications/showError';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -74,6 +75,7 @@ function WelcomeScreen({ route }: any) {
 	const [nationSelectList, setNationSelectList] = useState<NationSelect[]>(
 		[]
 	);
+	const [useTempValues, setUseTempValues] = useState<boolean>(false);
 	const [initialValues, setInitialValues] = useState<InitialValues>(
 		signMode === 'SignUp'
 			? {
@@ -93,6 +95,7 @@ function WelcomeScreen({ route }: any) {
 					password: undefined,
 			  }
 	);
+	const tempValues: any = useRef();
 	const [request, response, promptAsync] = Google.useAuthRequest({
 		androidClientId:
 			'163827222600-6dps18qkcsqln8anoes7aajk16ssubs9.apps.googleusercontent.com',
@@ -137,6 +140,7 @@ function WelcomeScreen({ route }: any) {
 
 	const handleSubmit = async (values: InitialValues) => {
 		setLoading(true);
+		tempValues.current = { ...values };
 		if (signMode === 'SignIn' && values.firstName) {
 			values.firstName = undefined;
 		}
@@ -164,6 +168,16 @@ function WelcomeScreen({ route }: any) {
 		) {
 			setLoading(false);
 			return setError('Network error: Unable to connect to the server');
+		} else if (result.status === 410) {
+			setError(undefined);
+			setLoading(false);
+			setSignMode('SignUp');
+			if (values.verifiedEmail) {
+				setUseTempValues(true);
+				return handleUseTerms(true);
+			} else {
+				return showError(result.data.error);
+			}
 		} else if (result.data.error) {
 			setLoading(false);
 			return setError(result.data.error);
@@ -251,6 +265,10 @@ function WelcomeScreen({ route }: any) {
 		if (error === 'You must confirm the terms of use') setError(undefined);
 		setOpen(false);
 		setTerms(true);
+		if (useTempValues) {
+			setUseTempValues(false);
+			return handleSubmit(tempValues.current);
+		}
 	};
 
 	const handleGoogleSignInUP = () => {
