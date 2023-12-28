@@ -9,8 +9,8 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import colors from '../config/colors';
-import defaultStyle from '../config/style';
 import Button from './Button';
+import defaultStyle from '../config/style';
 
 interface AppModal {
 	children: JSX.Element | JSX.Element[];
@@ -20,7 +20,9 @@ interface AppModal {
 	setVisible: (visible: boolean) => void;
 	closeBtnText?: string;
 	closeBtnbackgroundColor?: string;
+	closeBtnColor?: string;
 	style?: Object;
+	closeBtnStyle?: Object;
 	onCloseModal?: () => void;
 	disabled?: boolean;
 }
@@ -32,10 +34,12 @@ function AppModal({
 	visible,
 	closeBtnText = 'close',
 	closeBtnbackgroundColor = 'darkMedium',
+	closeBtnColor = 'white',
 	setVisible,
 	onCloseModal,
 	disabled = false,
 	style,
+	closeBtnStyle,
 }: AppModal) {
 	return (
 		<Modal
@@ -54,7 +58,7 @@ function AppModal({
 							setVisible(!visible);
 						}
 					}}
-					style={styles.closeTitleBtn}>
+					style={[styles.closeTitleBtn, defaultStyle.leftRTL(6)]}>
 					<MaterialCommunityIcons
 						name='close'
 						size={30}
@@ -64,10 +68,11 @@ function AppModal({
 				<View style={[styles.container, style]}>
 					<View style={styles.children}>{children}</View>
 					{!disabled && (
-						<View style={styles.closeBtn}>
+						<View style={[styles.closeBtn, closeBtnStyle]}>
 							<Button
 								title={closeBtnText}
 								backgroundColor={closeBtnbackgroundColor}
+								color={closeBtnColor}
 								onPress={() => {
 									onCloseModal && onCloseModal();
 									setVisible(!visible);
@@ -97,7 +102,6 @@ const styles = StyleSheet.create({
 	},
 	closeTitleBtn: {
 		top: Platform.OS === 'android' ? 35 : 40,
-		left: Platform.OS === 'android' ? -4 : 6,
 	},
 	children: {
 		flex: 1,

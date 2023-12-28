@@ -37,10 +37,11 @@ export interface User {
 	active?: boolean;
 	points?: Points;
 	postQuestions?: string[];
-	answeredQuestions?: string[];
+	answeredQuestions?: string[] | number;
 	rank?: number;
 	token?: string;
 	sounds?: boolean;
+	lastActivity?: Date;
 	getMoreDitails?: boolean;
 }
 

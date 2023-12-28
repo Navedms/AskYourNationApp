@@ -54,6 +54,13 @@ export default {
 				? 'row-reverse'
 				: 'row',
 	},
+	leftRTL: (left: number) => {
+		return Platform.OS === 'android' && textDirection === 'rtl'
+			? {
+					right: left,
+			  }
+			: { left: left };
+	},
 	leftOrRight: {
 		left:
 			Platform.OS === 'android' && textDirection === 'rtl' ? 30 : 'auto',

@@ -29,6 +29,7 @@ export interface Question {
 	nation?: Nation;
 	question: string;
 	answers: Answers;
+	rank?: number;
 	rating?: Rating;
 	amountOfanswers?: AmountOfanswers;
 	createdBy?: CreatedBy;
@@ -37,6 +38,7 @@ export interface Question {
 interface Answer {
 	id: string;
 	answerIndex: number;
+	rank: number;
 }
 
 interface RatingProps {
@@ -75,10 +77,11 @@ const post = (data: Question) => client.post(`${endpoint}`, data);
 
 const update = (data: Question) => client.patch(`${endpoint}/update`, data);
 
-const answer = ({ id, answerIndex }: Answer) =>
+const answer = ({ id, answerIndex, rank }: Answer) =>
 	client.patch(`${endpoint}/answer`, {
 		id,
 		answerIndex,
+		rank,
 	});
 
 const rating = ({ id, rating }: RatingProps) =>

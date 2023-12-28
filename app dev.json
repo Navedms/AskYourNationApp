@@ -3,7 +3,7 @@
 		"name": "Ask Your Nation",
 		"slug": "AskYourNationApp",
 		"scheme": "askyournationapp",
-		"version": "1.0.12",
+		"version": "1.0.14",
 		"orientation": "portrait",
 		"icon": "./assets/icon.png",
 		"userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
 			"supportsTablet": true,
 			"usesAppleSignIn": true,
 			"bundleIdentifier": "com.appn.askyournation",
-			"buildNumber": "1.0.12"
+			"buildNumber": "1.0.14"
 		},
 		"androidStatusBar": {
 			"translucent": true
@@ -28,7 +28,7 @@
 				"backgroundColor": "#ffffff"
 			},
 			"package": "com.appn.askyournation",
-			"versionCode": 12
+			"versionCode": 14
 		},
 		"web": {
 			"favicon": "./assets/favicon.png"

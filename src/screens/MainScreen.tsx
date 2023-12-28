@@ -106,10 +106,15 @@ export default function MainScreen({ navigation }: any) {
 		setLoading(false);
 	};
 
-	const postAnswer = async (id: string, answerIndex: number) => {
+	const postAnswer = async (
+		id: string,
+		answerIndex: number,
+		rank: number
+	) => {
 		const result: ApiResponse<any> = await questionApi.answer({
 			id,
 			answerIndex,
+			rank,
 		});
 		if (
 			!result.ok &&
@@ -217,11 +222,11 @@ export default function MainScreen({ navigation }: any) {
 
 	// handle functions
 
-	const handleSubmitAnswer = (id: string, index: number) => {
+	const handleSubmitAnswer = (id: string, index: number, rank: number) => {
 		isSpeaking && Speech.stop();
 		setUserAnswer(index);
 		setDisabled(true);
-		postAnswer(id, index);
+		postAnswer(id, index, rank);
 	};
 
 	const handleSubmitReport = (
@@ -319,6 +324,7 @@ export default function MainScreen({ navigation }: any) {
 		);
 		return () => {
 			subscription.remove();
+			StatusBar.setBarStyle('dark-content');
 		};
 	}, [navigation, isFocused]);
 
@@ -340,7 +346,7 @@ export default function MainScreen({ navigation }: any) {
 						<Button
 							title='Add New Question'
 							onPress={() =>
-								navigation.navigate(routes.MY_QUESTIONS.name)
+								navigation.navigate(routes.QUESTION_ADD.name)
 							}
 						/>
 					}

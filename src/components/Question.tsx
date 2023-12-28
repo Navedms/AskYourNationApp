@@ -16,7 +16,7 @@ export interface TranslateQuestion {
 
 interface QuestionComponentProps {
 	data: Question;
-	handleSubmitAnswer: (id: string, index: number) => void;
+	handleSubmitAnswer: (id: string, index: number, rank: number) => void;
 	handleTextToSpeech: (question: string, answers: Answers) => void;
 	disabled: boolean;
 	isSpeaking: boolean;
@@ -223,7 +223,9 @@ const QuestionComponent = ({
 								showAnswers?.userIndex === index &&
 								styles.wrongAnswersContainer,
 						]}
-						onPress={() => handleSubmitAnswer(data._id, index)}>
+						onPress={() =>
+							handleSubmitAnswer(data._id, index, user?.rank)
+						}>
 						<Text
 							style={[
 								styles.answerText,

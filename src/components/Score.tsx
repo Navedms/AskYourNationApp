@@ -11,7 +11,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 
 import Text from './Text';
 import numberFormat from '../utility/numberFormat';
-import { Nation, User } from '../api/auth';
+import { Nation, Points, User } from '../api/auth';
 import defaultStyle from '../config/style';
 import Icon from './Icon';
 import ImageSlide from './ImageSlide';
@@ -20,9 +20,12 @@ interface ScoreProps {
 	id: string;
 	title: string;
 	score?: number;
+	points?: Points;
 	rank: number;
 	nation?: Nation;
 	profilePic?: string | string[];
+	answeredQuestions: number;
+	lastActivity?: Date;
 	user: User | null;
 }
 
@@ -30,9 +33,12 @@ function Score({
 	id,
 	title,
 	score,
+	points,
 	nation,
 	profilePic,
 	rank,
+	answeredQuestions,
+	lastActivity,
 	user,
 }: ScoreProps) {
 	const [open, setOpen] = useState<boolean>(false);
@@ -145,13 +151,18 @@ function Score({
 						<Text style={styles.points}>points</Text>
 					</View>
 				</View>
-				{profilePic && (
-					<ImageSlide
-						images={profilePic}
-						onClose={() => setOpen(false)}
-						visible={open}
-					/>
-				)}
+				<ImageSlide
+					images={profilePic}
+					title={title}
+					score={score}
+					points={points}
+					nation={nation}
+					rank={rank}
+					answeredQuestions={answeredQuestions}
+					lastActivity={lastActivity}
+					onClose={() => setOpen(false)}
+					visible={open}
+				/>
 			</View>
 		</TouchableWithoutFeedback>
 	);

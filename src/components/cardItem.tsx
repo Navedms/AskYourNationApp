@@ -108,6 +108,9 @@ function CardItem({
 								style={[
 									styles.detailsContainer,
 									defaultStyle.alignItemsRtl,
+									IconComponent && {
+										width: '78%',
+									},
 									(SwitchComponent || image) && {
 										width: '65%',
 									},
@@ -225,7 +228,7 @@ const styles = StyleSheet.create({
 	detailsContainer: {
 		marginHorizontal: 10,
 		justifyContent: 'center',
-		width: '78%',
+		width: '100%',
 	},
 	title: {
 		fontSize: 18,

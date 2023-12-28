@@ -167,9 +167,12 @@ function HighScoresAnswersScreen({ navigation }: HighScoresScreenProps) {
 									id={item.id}
 									title={`${item.firstName} ${item.lastName}`}
 									score={item.points?.[filters.sortBy]}
+									points={item.points}
 									profilePic={item.profilePic}
 									rank={index + 1}
 									nation={item.nation}
+									answeredQuestions={item.answeredQuestions}
+									lastActivity={item.lastActivity}
 									user={user}
 								/>
 							)}
@@ -181,9 +184,14 @@ function HighScoresAnswersScreen({ navigation }: HighScoresScreenProps) {
 								id={user.id}
 								title={`${user.firstName} ${user.lastName}`}
 								score={user.points?.[filters.sortBy]}
+								points={user.points}
 								profilePic={user.profilePic}
 								rank={user.rank || 0}
 								nation={user.nation}
+								answeredQuestions={
+									user.answeredQuestions?.length
+								}
+								lastActivity={user.lastActivity}
 								user={user}
 							/>
 						</View>

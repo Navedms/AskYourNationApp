@@ -201,6 +201,8 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 
 		if (item.edit) {
 			newQuestion.id = item._id;
+		} else {
+			newQuestion.rank = user?.rank;
 		}
 
 		const result: ApiResponse<any> = item.edit

@@ -213,7 +213,11 @@ function ProfileScreen({ navigation }: { navigation: any }) {
 					<CardItem
 						title={`Answered correctly ${numberFormat(
 							user?.points?.answers
-						)} questions`}
+						)}/${user.answeredQuestions?.length} (${(
+							(user?.points?.answers /
+								user.answeredQuestions?.length) *
+							100
+						).toFixed(0)}%)`}
 						subTitle={`You write ${numberFormat(
 							user?.points?.questions
 						)} questions`}

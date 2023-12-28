@@ -1,9 +1,9 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import React from "react";
+import { createStackNavigator } from "@react-navigation/stack";
 
-import routes from './routes';
-import AppNavigator from './AppNavigator';
-import AuthNavigator from './AuthNavigator';
+import routes from "./routes";
+import AppNavigator from "./AppNavigator";
+import AuthNavigator from "./AuthNavigator";
 
 interface RootNavigatorProps {
 	user?: User;
@@ -22,7 +22,7 @@ const RootNavigator = ({ user }: RootNavigatorProps) => (
 	<Stack.Navigator
 		screenOptions={{
 			headerShown: false,
-			presentation: 'card',
+			presentation: "card",
 		}}>
 		<Stack.Screen
 			name={routes.ROOT.name}

@@ -7,12 +7,16 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	Dimensions,
+	Platform,
 } from 'react-native';
 import { jwtDecode } from 'jwt-decode';
 import * as Yup from 'yup';
 import * as Google from 'expo-auth-session/providers/google';
 import * as Apple from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 
 import authApi, { Nation, User } from '../../api/auth';
 import {
@@ -60,6 +64,7 @@ interface InitialValues {
 	password?: string;
 	terms?: boolean;
 	verifiedEmail?: boolean;
+	pushToken?: string;
 }
 
 function WelcomeScreen({ route }: any) {
@@ -68,6 +73,7 @@ function WelcomeScreen({ route }: any) {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [terms, setTerms] = useState<boolean>(false);
 	const [open, setOpen] = useState<boolean>(false);
+	const [hasPermission, setHasPermission] = useState<boolean>(false);
 	const [appleBtnAvailable, setAppleBtnAvailable] = useState<boolean>(false);
 	const [signMode, setSignMode] = useState<string>('SignIn');
 	const [nationList, setNationList] = useState<Nation[]>([]);
@@ -138,6 +144,40 @@ function WelcomeScreen({ route }: any) {
 			  }
 	);
 
+	const registerForNotifications = async () => {
+		let token;
+
+		if (Platform.OS === 'android') {
+			await Notifications.setNotificationChannelAsync('default', {
+				name: 'default',
+				importance: Notifications.AndroidImportance.MAX,
+				vibrationPattern: [0, 250, 250, 250],
+			});
+		}
+
+		if (Device.isDevice) {
+			const { status: existingStatus } =
+				await Notifications.getPermissionsAsync();
+			let finalStatus = existingStatus;
+			if (existingStatus !== 'granted') {
+				const { status } =
+					await Notifications.requestPermissionsAsync();
+				finalStatus = status;
+			}
+			if (finalStatus !== 'granted') {
+				return;
+			}
+			token = (
+				await Notifications.getExpoPushTokenAsync({
+					projectId: Constants?.expoConfig?.extra?.eas.projectId,
+				})
+			).data;
+		} else {
+			return;
+		}
+		return token;
+	};
+
 	const handleSubmit = async (values: InitialValues) => {
 		setLoading(true);
 		tempValues.current = { ...values };
@@ -158,6 +198,12 @@ function WelcomeScreen({ route }: any) {
 		}
 		values.email = values.email?.toLowerCase();
 
+		// get push notification token
+		const pushToken = await registerForNotifications();
+
+		if (pushToken) {
+			values.pushToken = pushToken;
+		}
 		const result: ApiResponse<any> | any = await authApi.loginRegister(
 			values
 		);

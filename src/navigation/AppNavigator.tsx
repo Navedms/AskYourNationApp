@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
 	MaterialCommunityIcons,
@@ -7,19 +7,67 @@ import {
 } from '@expo/vector-icons';
 import { getLocales } from 'expo-localization';
 import { Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 import HighScoresNavigator from './HighScoresNavigator';
 import MainScreen from '../screens/MainScreen';
+import authApi from '../api/auth';
 import QuestionAddEditScreen from '../screens/QuestionAddEditScreen';
 import routes from './routes';
-import MyQuestionsScreen from '../screens/MyQuestionsScreen';
 import ProfileNavigator from './ProfileNavigator';
 import MyQuestionsNavigator from './MyQuestionsNavigator';
+import navigation from './rootNavigation';
+import useAuth from '../auth/useAuth';
+import { ApiResponse } from 'apisauce';
 
 const Tab = createBottomTabNavigator();
 const { textDirection } = getLocales()[0];
 
 const AppNavigator = () => {
+	const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+	const { setUser } = useAuth();
+	const reciveNotification = () => {
+		registerForNotifications();
+
+		const subscriptionClick =
+			Notifications.addNotificationResponseReceivedListener(
+				async ({ notification }) => {
+					subscriptionClick.remove();
+					getUser();
+					navigation.navigate(
+						notification.request.content.categoryIdentifier
+					);
+				}
+			);
+	};
+
+	const registerForNotifications = async () => {
+		const settings = await Notifications.getPermissionsAsync();
+		setHasPermission(
+			settings.granted ||
+				settings.ios?.status ===
+					Notifications.IosAuthorizationStatus.PROVISIONAL
+		);
+	};
+
+	const getUser = async () => {
+		const result: ApiResponse<any> = await authApi.getUser('total');
+		if (
+			!result.ok &&
+			result.problem === 'NETWORK_ERROR' &&
+			!result.status
+		) {
+			return;
+		} else if (result.data.error) {
+			return;
+		}
+		setUser(result.data);
+	};
+
+	useEffect(() => {
+		reciveNotification();
+	}, []);
+
 	if (Platform.OS === 'android' && textDirection === 'rtl') {
 		return (
 			<Tab.Navigator
