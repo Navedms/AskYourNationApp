@@ -96,7 +96,7 @@ const ImageSlide = ({
 				]}>
 				<View style={styles.titleContainer}>
 					{title && <Text style={styles.title}>{title}</Text>}
-					{nation && (
+					{nation?.name && (
 						<Text style={styles.subTitle}>
 							{`${nation?.flag} ${nation?.name}`}
 						</Text>

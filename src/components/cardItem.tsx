@@ -108,7 +108,7 @@ function CardItem({
 								style={[
 									styles.detailsContainer,
 									defaultStyle.alignItemsRtl,
-									IconComponent && {
+									renderLeftActions && {
 										width: '78%',
 									},
 									(SwitchComponent || image) && {
