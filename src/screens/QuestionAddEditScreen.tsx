@@ -53,13 +53,6 @@ interface SendQuestion {
 	question: string;
 }
 
-const defaultValues: InitialValues = {
-	nation: undefined,
-	question: undefined,
-	answersOptions: [],
-	answersCorrectIndex: undefined,
-};
-
 const adUnitId = __DEV__
 	? TestIds.BANNER
 	: Platform.OS === 'ios'
@@ -167,6 +160,13 @@ function QuestionAddEditScreen({ navigation, route }: any) {
 
 	//state
 	const { setUser, user, logOut } = useAuth();
+	const defaultValues: InitialValues = {
+		nation: user?.nation?.name,
+		question: undefined,
+		answersOptions: [],
+		answersCorrectIndex: undefined,
+	};
+
 	const [error, setError] = useState<string | undefined>(undefined);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [resetFields, setResetFields] = useState<boolean>(false);
